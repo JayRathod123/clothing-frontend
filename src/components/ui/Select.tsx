@@ -152,9 +152,9 @@ export const Select: React.FC<SelectProps> = ({
 
   // Size variations
   const sizeStyles = {
-    sm: 'text-xs px-3 py-1.5 min-h-[34px] gap-2',
-    md: 'text-xs px-3.5 py-2.5 min-h-[42px] gap-2.5',
-    lg: 'text-sm px-4 py-3 min-h-[48px] gap-3',
+    sm: 'text-xs sm:text-sm px-3.5 py-2 min-h-[38px] gap-2',
+    md: 'text-sm px-4 py-2.5 min-h-[44px] gap-2.5',
+    lg: 'text-base px-4 py-3 min-h-[50px] gap-3',
   };
 
   // Variant variations
@@ -183,7 +183,7 @@ export const Select: React.FC<SelectProps> = ({
         <label
           htmlFor={selectId}
           onClick={() => !disabled && setIsOpen((prev) => !prev)}
-          className="text-[11px] font-bold uppercase tracking-wider text-neutral-800 mb-1.5 select-none cursor-pointer"
+          className="text-xs font-bold uppercase tracking-wider text-neutral-900 mb-1.5 select-none cursor-pointer"
         >
           {label}
         </label>
@@ -214,7 +214,7 @@ export const Select: React.FC<SelectProps> = ({
         </span>
 
         <ChevronDown
-          className={`w-3.5 h-3.5 text-neutral-500 shrink-0 transition-transform duration-200 ease-out ${
+          className={`w-4 h-4 text-neutral-500 shrink-0 transition-transform duration-200 ease-out ${
             isOpen ? 'rotate-180 text-black' : ''
           }`}
         />
@@ -226,7 +226,7 @@ export const Select: React.FC<SelectProps> = ({
           ref={menuRef}
           role="listbox"
           tabIndex={-1}
-          className={`absolute z-50 mt-1.5 w-full min-w-[200px] bg-white border border-neutral-200/90 shadow-xl shadow-black/10 py-1 max-h-64 overflow-y-auto outline-none transition-all duration-150 ease-out animate-in fade-in-0 zoom-in-95 ${
+          className={`absolute z-50 mt-1.5 w-full min-w-[200px] bg-white border border-neutral-200/90 shadow-xl shadow-black/10 py-1.5 max-h-64 overflow-y-auto outline-none transition-all duration-150 ease-out animate-in fade-in-0 zoom-in-95 ${
             align === 'right' ? 'right-0' : 'left-0'
           } ${menuClassName}`}
           style={{ top: '100%' }}
@@ -244,7 +244,7 @@ export const Select: React.FC<SelectProps> = ({
                 disabled={option.disabled}
                 onClick={() => handleSelect(option.value)}
                 onMouseEnter={() => setHighlightedIndex(index)}
-                className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 text-xs tracking-wide transition-colors cursor-pointer select-none ${
+                className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm tracking-wide transition-colors cursor-pointer select-none ${
                   option.disabled
                     ? 'opacity-40 cursor-not-allowed text-neutral-400'
                     : isSelected
@@ -257,14 +257,14 @@ export const Select: React.FC<SelectProps> = ({
                 <div className="flex flex-col truncate pr-2">
                   <span className="truncate">{option.label}</span>
                   {option.sublabel && (
-                    <span className="text-[10px] text-neutral-400 font-normal truncate">
+                    <span className="text-xs text-neutral-500 font-normal truncate">
                       {option.sublabel}
                     </span>
                   )}
                 </div>
 
                 {isSelected && (
-                  <Check className="w-3.5 h-3.5 text-black stroke-[2.5] shrink-0" />
+                  <Check className="w-4 h-4 text-black stroke-[2.5] shrink-0" />
                 )}
               </button>
             );
@@ -273,11 +273,10 @@ export const Select: React.FC<SelectProps> = ({
       )}
 
       {/* Error or Helper text */}
-      {error ? (
-        <span className="text-[11px] text-red-600 font-medium mt-1">{error}</span>
-      ) : helperText ? (
-        <span className="text-[11px] text-neutral-500 mt-1">{helperText}</span>
-      ) : null}
+      {error && <span className="text-xs text-red-600 font-medium mt-1">{error}</span>}
+      {!error && helperText && (
+        <span className="text-xs text-neutral-500 mt-1">{helperText}</span>
+      )}
     </div>
   );
 };

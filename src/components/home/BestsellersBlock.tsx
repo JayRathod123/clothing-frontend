@@ -1,42 +1,38 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Container } from '@/components/layout/Container';
 import { ProductCard } from '@/components/product/ProductCard';
-import { MOCK_PRODUCTS } from '@/constants/mockData';
+import { useProducts } from '@/hooks/useProducts';
 import { ArrowRight } from 'lucide-react';
 
 export function BestsellersBlock() {
-  // Show complementary top favorites
-  const bestsellers = MOCK_PRODUCTS.slice(4, 8);
+  const { data } = useProducts({ limit: 4, sortBy: 'popularity', sortOrder: 'DESC' });
+  const bestsellers = data?.items || [];
+
+  if (bestsellers.length === 0) return null;
 
   return (
-    <section className="py-20 md:py-28 bg-[#F7F6F2]">
+    <section className="py-16 md:py-20 bg-white">
       <Container>
-        <div className="space-y-10">
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E6E3DD] pb-4">
-            <div className="space-y-1">
-              <span className="editorial-kicker text-[#8A6A45]">
-                TIMELESS CLASSICS
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#171717]">
-                MOST WANTED
+        <div className="space-y-8">
+          <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 uppercase">
+                Best Sellers
               </h2>
-              <p className="text-xs text-[#686868] max-w-md pt-0.5">
-                Our most sought-after overshirts, tailored chinos, and knitwear.
-              </p>
             </div>
             <Link
               href="/shop"
-              className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold text-[#171717] hover:text-[#8A6A45] transition-colors group"
+              className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-bold text-neutral-900 hover:text-sky-600 transition-colors"
             >
               <span>Explore All</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* 4 Bestselling Cards Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {bestsellers.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -46,3 +42,5 @@ export function BestsellersBlock() {
     </section>
   );
 }
+
+export default BestsellersBlock;

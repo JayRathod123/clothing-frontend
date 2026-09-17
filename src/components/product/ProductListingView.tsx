@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { RangeSlider } from '@/components/ui/RangeSlider';
 import { useProducts } from '@/hooks/useProducts';
-import { MOCK_CATEGORIES } from '@/constants/mockData';
+import { useCategories } from '@/hooks/useCategories';
 import { SlidersHorizontal, Grid3X3, Grid2X2, X } from 'lucide-react';
 
 interface ProductListingViewProps {
@@ -40,6 +40,9 @@ export function ProductListingView({
     sortOrder,
     maxPrice: priceRange,
   });
+
+  // Dynamic Categories from Backend API
+  const { data: categories = [] } = useCategories();
 
   // Client-side multi-tag filter refinement (size & color)
   const filteredProducts = useMemo(() => {
@@ -109,28 +112,28 @@ export function ProductListingView({
     <div className="space-y-8">
       {/* Category Filter */}
       <div className="space-y-3">
-        <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#171717]">
+        <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-neutral-900">
           Category
         </h4>
-        <div className="space-y-1.5 text-xs">
+        <div className="space-y-2 text-sm">
           <button
             onClick={() => setSelectedCategory('all')}
             className={`block w-full text-left py-1 transition-colors ${
               selectedCategory === 'all'
-                ? 'font-bold text-[#171717]'
-                : 'text-[#686868] hover:text-[#171717]'
+                ? 'font-bold text-black'
+                : 'text-neutral-600 hover:text-black'
             }`}
           >
             All Categories
           </button>
-          {MOCK_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={`block w-full text-left py-1 transition-colors ${
                 selectedCategory === cat.id
-                  ? 'font-bold text-[#171717]'
-                  : 'text-[#686868] hover:text-[#171717]'
+                  ? 'font-bold text-black'
+                  : 'text-neutral-600 hover:text-black'
               }`}
             >
               {cat.name}
@@ -141,20 +144,20 @@ export function ProductListingView({
 
       {/* Size Filter */}
       <div className="space-y-3 border-t border-neutral-200 pt-6">
-        <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#171717]">
+        <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-neutral-900">
           Sizes
         </h4>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {availableSizes.map((size) => {
             const isSelected = selectedSizes.includes(size);
             return (
               <button
                 key={size}
                 onClick={() => toggleSize(size)}
-                className={`min-w-8 h-8 px-2 text-[11px] uppercase font-semibold border transition-all ${
+                className={`min-w-10 h-10 px-3 text-xs sm:text-sm uppercase font-bold border transition-all ${
                   isSelected
-                    ? 'bg-[#171717] text-white border-[#171717] shadow-xs'
-                    : 'bg-white text-[#171717] border-neutral-200 hover:border-black'
+                    ? 'bg-black text-white border-black shadow-xs'
+                    : 'bg-white text-neutral-800 border-neutral-300 hover:border-black'
                 }`}
               >
                 {size}
@@ -166,7 +169,7 @@ export function ProductListingView({
 
       {/* Color Filter */}
       <div className="space-y-3 border-t border-neutral-200 pt-6">
-        <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#171717]">
+        <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-neutral-900">
           Color
         </h4>
         <div className="flex flex-wrap gap-2.5">
@@ -177,8 +180,8 @@ export function ProductListingView({
                 key={col.name}
                 onClick={() => toggleColor(col.name)}
                 title={col.name}
-                className={`w-6 h-6 rounded-full border border-black/10 relative p-0.5 transition-all ${
-                  isSelected ? 'ring-2 ring-[#171717] ring-offset-2 scale-110' : 'hover:scale-110'
+                className={`w-7 h-7 rounded-full border border-black/10 relative p-0.5 transition-all cursor-pointer ${
+                  isSelected ? 'ring-2 ring-black ring-offset-2 scale-110' : 'hover:scale-110'
                 }`}
                 style={{ backgroundColor: col.hex }}
               />
@@ -215,10 +218,10 @@ export function ProductListingView({
       <Container>
         {/* Top Title & Subtitle */}
         <div className="space-y-2 pb-6 border-b border-neutral-200">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 uppercase">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-neutral-900 uppercase font-heading">
             {title}
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 max-w-xl">
+          <p className="text-sm sm:text-base text-neutral-600 max-w-xl">
             {subtitle}
           </p>
         </div>
@@ -229,20 +232,20 @@ export function ProductListingView({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="lg:hidden inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-300 hover:border-black text-xs font-bold uppercase tracking-wider text-[#171717] transition-colors"
+              className="lg:hidden inline-flex items-center gap-2 px-3.5 py-2.5 bg-white border border-neutral-300 hover:border-black text-sm font-bold uppercase tracking-wider text-neutral-900 transition-colors cursor-pointer"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <SlidersHorizontal className="w-4 h-4" />
               <span>Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}</span>
             </button>
-            <span className="text-xs text-[#686868]">
-              Showing <strong className="text-neutral-900">{filteredProducts.length}</strong> pieces
+            <span className="text-sm font-medium text-neutral-600">
+              Showing <strong className="font-extrabold text-neutral-900">{filteredProducts.length}</strong> pieces
             </span>
           </div>
 
           <div className="flex items-center gap-4 ml-auto">
             {/* Custom Luxury Sort Dropdown */}
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-[#686868] uppercase text-[11px] font-bold tracking-wider hidden sm:inline select-none">
+            <div className="flex items-center gap-2.5">
+              <span className="text-neutral-700 uppercase text-xs sm:text-sm font-bold tracking-wider hidden sm:inline select-none">
                 Sort By:
               </span>
               <Select
@@ -255,8 +258,8 @@ export function ProductListingView({
                 options={sortOptions}
                 size="sm"
                 align="right"
-                triggerClassName="min-w-[190px] border-neutral-300 hover:border-black font-bold uppercase text-[11px] tracking-wider py-2 bg-white shadow-2xs"
-                menuClassName="w-[210px] shadow-2xl border-neutral-200"
+                triggerClassName="min-w-[200px] border-neutral-300 hover:border-black font-bold uppercase text-xs sm:text-sm tracking-wider py-2.5 bg-white shadow-2xs"
+                menuClassName="w-[220px] shadow-2xl border-neutral-200"
               />
             </div>
 
@@ -271,7 +274,7 @@ export function ProductListingView({
                 }`}
                 title="3 Columns"
               >
-                <Grid2X2 className="w-3.5 h-3.5" />
+                <Grid2X2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setGridColumns(4)}
@@ -282,7 +285,7 @@ export function ProductListingView({
                 }`}
                 title="4 Columns"
               >
-                <Grid3X3 className="w-3.5 h-3.5" />
+                <Grid3X3 className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -290,20 +293,20 @@ export function ProductListingView({
 
         {/* Active Filter Chips Bar */}
         {activeFilterCount > 0 && (
-          <div className="py-3 flex flex-wrap items-center gap-2 border-b border-neutral-100">
-            <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider mr-1">
+          <div className="py-3.5 flex flex-wrap items-center gap-2.5 border-b border-neutral-100">
+            <span className="text-xs uppercase font-bold text-neutral-500 tracking-wider mr-1">
               Active Filters:
             </span>
 
             {selectedCategory !== 'all' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 border border-neutral-200 text-neutral-800 text-[11px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 border border-neutral-200 text-neutral-900 text-xs sm:text-sm font-semibold">
                 Category:{' '}
-                {MOCK_CATEGORIES.find((c) => c.id === selectedCategory)?.name || selectedCategory}
+                {categories.find((c) => c.id === selectedCategory)?.name || selectedCategory}
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className="hover:text-black transition-colors"
+                  className="hover:text-black transition-colors ml-0.5"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </span>
             )}
@@ -311,14 +314,14 @@ export function ProductListingView({
             {selectedSizes.map((size) => (
               <span
                 key={size}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 border border-neutral-200 text-neutral-800 text-[11px] font-semibold"
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 border border-neutral-200 text-neutral-900 text-xs sm:text-sm font-semibold"
               >
                 Size: {size}
                 <button
                   onClick={() => toggleSize(size)}
-                  className="hover:text-black transition-colors"
+                  className="hover:text-black transition-colors ml-0.5"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </span>
             ))}
@@ -326,14 +329,14 @@ export function ProductListingView({
             {selectedColors.map((col) => (
               <span
                 key={col}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 border border-neutral-200 text-neutral-800 text-[11px] font-semibold"
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 border border-neutral-200 text-neutral-900 text-xs sm:text-sm font-semibold"
               >
                 Color: {col}
                 <button
                   onClick={() => toggleColor(col)}
-                  className="hover:text-black transition-colors"
+                  className="hover:text-black transition-colors ml-0.5"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </span>
             ))}

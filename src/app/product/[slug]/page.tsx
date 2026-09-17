@@ -10,7 +10,6 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { ProductReviewsSection } from '@/components/product/ProductReviewsSection';
 import { productService } from '@/services/product.service';
 import { reviewService } from '@/services/review.service';
-import { MOCK_PRODUCTS } from '@/constants/mockData';
 import { ChevronRight, ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -48,8 +47,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const reviewsData = await reviewService.getProductReviews(product.id);
   const reviews = reviewsData.reviews || [];
 
-  // Related products from catalog
-  const relatedProducts = MOCK_PRODUCTS.filter((p) => p.id !== product.id).slice(0, 4);
+  // Related products dynamically from backend API
+  const relatedRes = await productService.getProducts({
+    categoryId: product.categoryId,
+    limit: 5,
+  });
+  const relatedProducts = (relatedRes.items || []).filter((p) => p.id !== product.id).slice(0, 4);
 
   return (
     <div className="py-8 md:py-12 bg-white">

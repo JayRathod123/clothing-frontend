@@ -2,27 +2,27 @@ import axiosInstance from '@/lib/axiosInstance';
 import { Collection, CollectionFilterParams } from '@/types/collection.types';
 import { Product } from '@/types/product.types';
 import { ApiResponse, PaginatedData } from '@/types/api.types';
-import { MOCK_COLLECTIONS, MOCK_PRODUCTS } from '@/constants/mockData';
+import { normalizeProduct } from './product.service';
 
 export const collectionService = {
-  // Get all collections
+  // Get all collections directly from live API
   async getCollections(params?: CollectionFilterParams): Promise<Collection[]> {
     try {
       const response = await axiosInstance.get<ApiResponse<any>>('/api/collections', {
         params,
       });
-      const items = response.data?.data?.items || response.data?.data?.data || [];
-      if (response.data.success && items.length > 0) {
+      const items = response.data?.data?.data || response.data?.data?.items || [];
+      if (response.data.success && Array.isArray(items)) {
         return items;
       }
     } catch (err) {
-      console.warn('API /api/collections fallback', err);
+      console.error('API /api/collections error:', err);
     }
 
-    return MOCK_COLLECTIONS;
+    return [];
   },
 
-  // Get collection by slug
+  // Get collection by slug directly from live API
   async getCollectionBySlug(slug: string): Promise<Collection | null> {
     try {
       const response = await axiosInstance.get<ApiResponse<Collection>>(`/api/collections/slug/${slug}`);
@@ -30,23 +30,30 @@ export const collectionService = {
         return response.data.data;
       }
     } catch (err) {
-      console.warn(`API /api/collections/slug/${slug} fallback`, err);
+      console.warn(`API /api/collections/slug/${slug} error:`, err);
     }
 
-    return MOCK_COLLECTIONS.find(c => c.slug === slug) || MOCK_COLLECTIONS[0];
+    try {
+      const all = await this.getCollections();
+      return all.find(c => c.slug === slug) || null;
+    } catch {
+      return null;
+    }
   },
 
-  // Get products in a collection by slug
+  // Get products in a collection by slug directly from live API
   async getCollectionProducts(slug: string): Promise<Product[]> {
     try {
-      const response = await axiosInstance.get<ApiResponse<PaginatedData<Product>>>(`/api/collections/slug/${slug}/products`);
-      if (response.data.success && response.data.data?.items?.length > 0) {
-        return response.data.data.items;
+      const response = await axiosInstance.get<ApiResponse<PaginatedData<any>>>(`/api/collections/slug/${slug}/products`);
+      if (response.data.success && response.data.data?.items) {
+        return response.data.data.items.map(normalizeProduct);
       }
     } catch (err) {
-      console.warn(`API /api/collections/slug/${slug}/products fallback`, err);
+      console.warn(`API /api/collections/slug/${slug}/products error:`, err);
     }
 
-    return MOCK_PRODUCTS.slice(0, 6);
+    return [];
   }
 };
+
+export default collectionService;

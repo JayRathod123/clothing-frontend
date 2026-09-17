@@ -25,14 +25,14 @@ export function TrustBadgesStrip() {
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {/* Badge 1 */}
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
-              <Truck className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
+              <Truck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-neutral-900">
+              <h4 className="text-sm sm:text-base font-extrabold text-neutral-900">
                 Free Shipping
               </h4>
-              <p className="text-[11px] text-neutral-500">
+              <p className="text-xs sm:text-sm text-neutral-500 font-medium">
                 On Prepaid Orders
               </p>
             </div>
@@ -40,14 +40,14 @@ export function TrustBadgesStrip() {
 
           {/* Badge 2 */}
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
-              <RotateCcw className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
+              <RotateCcw className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-neutral-900">
+              <h4 className="text-sm sm:text-base font-extrabold text-neutral-900">
                 Easy Returns
               </h4>
-              <p className="text-[11px] text-neutral-500">
+              <p className="text-xs sm:text-sm text-neutral-500 font-medium">
                 7-days Returns
               </p>
             </div>
@@ -55,14 +55,14 @@ export function TrustBadgesStrip() {
 
           {/* Badge 3 */}
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
-              <Headphones className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
+              <Headphones className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-neutral-900">
+              <h4 className="text-sm sm:text-base font-extrabold text-neutral-900">
                 Online Support
               </h4>
-              <p className="text-[11px] text-neutral-500">
+              <p className="text-xs sm:text-sm text-neutral-500 font-medium">
                 Ensure the product quality
               </p>
             </div>
@@ -70,14 +70,14 @@ export function TrustBadgesStrip() {
 
           {/* Badge 4 */}
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 shrink-0">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-neutral-900">
+              <h4 className="text-sm sm:text-base font-extrabold text-neutral-900">
                 Secure Checkout
               </h4>
-              <p className="text-[11px] text-neutral-500">
+              <p className="text-xs sm:text-sm text-neutral-500 font-medium">
                 100% Payment Secure
               </p>
             </div>
@@ -86,18 +86,18 @@ export function TrustBadgesStrip() {
       </div>
 
       {/* GIVE YOUR FEEDBACK BANNER */}
-      <div className="bg-black text-white py-4 px-4 sm:px-6 lg:px-8">
+      <div className="bg-black text-white py-5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+          <h3 className="text-lg sm:text-2xl font-black tracking-tight text-white font-heading">
             Give your Feedback
           </h3>
 
           <button
             type="button"
             onClick={() => setShowFeedbackModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-white text-black font-bold text-xs rounded-full hover:bg-neutral-100 active:scale-95 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-black font-extrabold text-sm rounded-full hover:bg-neutral-100 active:scale-95 transition-all shadow-sm cursor-pointer"
           >
-            <PhoneCall className="w-3.5 h-3.5" />
+            <PhoneCall className="w-4 h-4" />
             <span>Feedback</span>
           </button>
         </div>

@@ -62,9 +62,9 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Header Info */}
-      <div className="flex items-center justify-between text-[11px] uppercase font-bold tracking-wider text-[#171717]">
+      <div className="flex items-center justify-between text-xs sm:text-sm uppercase font-extrabold tracking-wider text-neutral-900">
         <span>{label || 'Max Price'}</span>
-        <span className="bg-neutral-100 text-black px-2 py-0.5 font-semibold text-xs border border-neutral-200">
+        <span className="bg-neutral-100 text-black px-2.5 py-0.5 font-bold text-xs sm:text-sm border border-neutral-200">
           {formatValue(value)}
         </span>
       </div>
@@ -104,7 +104,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
       </div>
 
       {/* Range Limits */}
-      <div className="flex justify-between text-[10px] text-neutral-400 font-medium">
+      <div className="flex justify-between text-xs text-neutral-500 font-medium">
         <span>{formatValue(min)}</span>
         <span>{formatValue(max)}</span>
       </div>

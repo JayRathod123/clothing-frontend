@@ -1,7 +1,6 @@
 import axiosInstance from '@/lib/axiosInstance';
 import { Product, ProductFilterParams, ProductVariant, ProductImage } from '@/types/product.types';
 import { PaginatedData, ApiResponse } from '@/types/api.types';
-import { MOCK_PRODUCTS } from '@/constants/mockData';
 
 // Normalizer to convert backend NestJS schema to clean frontend model
 export function normalizeProduct(raw: any): Product {
@@ -50,56 +49,20 @@ export function normalizeProduct(raw: any): Product {
       })
     : [
         {
-          id: `var-${raw.id}-s`,
-          productId: raw.id,
-          sku: `${raw.sku || 'SKU'}-S`,
-          size: 'S',
-          color: 'Onyx Black',
-          colorHex: '#171717',
-          price: basePrice,
-          discountPrice,
-          stockQuantity: 15,
-          isActive: true,
-        },
-        {
           id: `var-${raw.id}-m`,
           productId: raw.id,
           sku: `${raw.sku || 'SKU'}-M`,
           size: 'M',
-          color: 'Onyx Black',
-          colorHex: '#171717',
+          color: 'Navy Blue',
+          colorHex: '#1E3A8A',
           price: basePrice,
           discountPrice,
           stockQuantity: 25,
           isActive: true,
         },
-        {
-          id: `var-${raw.id}-l`,
-          productId: raw.id,
-          sku: `${raw.sku || 'SKU'}-L`,
-          size: 'L',
-          color: 'Onyx Black',
-          colorHex: '#171717',
-          price: basePrice,
-          discountPrice,
-          stockQuantity: 30,
-          isActive: true,
-        },
-        {
-          id: `var-${raw.id}-xl`,
-          productId: raw.id,
-          sku: `${raw.sku || 'SKU'}-XL`,
-          size: 'XL',
-          color: 'Onyx Black',
-          colorHex: '#171717',
-          price: basePrice,
-          discountPrice,
-          stockQuantity: 20,
-          isActive: true,
-        },
       ];
 
-  const avgRating = raw.averageRating ? parseFloat(raw.averageRating) : (raw.rating || 4.8);
+  const avgRating = raw.averageRating ? parseFloat(raw.averageRating) : (raw.rating || 0);
 
   return {
     id: raw.id,
@@ -110,17 +73,17 @@ export function normalizeProduct(raw: any): Product {
     categoryName: raw.category?.name || raw.categoryName || 'T-Shirts',
     basePrice,
     discountPrice,
-    sku: raw.sku || 'KTC-001',
+    sku: raw.sku || 'VAS-001',
     status: raw.status || 'active',
     isFeatured: raw.isFeatured ?? false,
-    metaTitle: raw.metaTitle || `${raw.name} | Streetwear T-Shirt`,
+    metaTitle: raw.metaTitle || `${raw.name} | INKSTYLES`,
     metaDescription: raw.metaDescription || raw.description,
     primaryImage,
     secondaryImage,
     images: images.length > 0 ? images : [{ id: `img-1`, productId: raw.id, url: primaryImage, isPrimary: true, sortOrder: 0 }],
     variants,
-    rating: avgRating > 0 ? avgRating : 4.8,
-    reviewCount: raw.reviewCount || 18,
+    rating: avgRating > 0 ? avgRating : 5.0,
+    reviewCount: raw.reviewCount || 0,
     gsm: raw.gsm || 240,
     fabric: raw.fabric || '100% Super Combed Ringspun Terry Cotton',
     fit: raw.fit || 'Oversized Boxy Silhouette',
@@ -143,7 +106,7 @@ export function normalizeProduct(raw: any): Product {
 }
 
 export const productService = {
-  // Get paginated list of products with filters
+  // Get paginated list of products directly from live API
   async getProducts(params?: ProductFilterParams): Promise<PaginatedData<Product>> {
     try {
       const response = await axiosInstance.get<ApiResponse<PaginatedData<any>>>('/api/products', {
@@ -152,112 +115,63 @@ export const productService = {
 
       if (response.data.success && response.data.data) {
         const rawItems = response.data.data.items || [];
-        if (rawItems.length > 0) {
-          const normalized = rawItems.map(normalizeProduct);
+        const normalized = rawItems.map(normalizeProduct);
 
-          // If backend has fewer than 6 items (e.g. initial dev database), combine with curated mock products
-          // so the storefront looks full and rich across all categories
-          let combined = normalized;
-          if (normalized.length < 6 && (!params?.search)) {
-            const existingSlugs = new Set(normalized.map(p => p.slug));
-            const additional = MOCK_PRODUCTS.filter(p => !existingSlugs.has(p.slug));
-            combined = [...normalized, ...additional];
-          }
-
-          return {
-            items: combined,
-            total: Math.max(response.data.data.total || 0, combined.length),
-            page: response.data.data.page || 1,
-            limit: response.data.data.limit || 12,
-            totalPages: Math.ceil(combined.length / (response.data.data.limit || 12)) || 1,
-          };
-        }
+        return {
+          items: normalized,
+          total: response.data.data.total ?? normalized.length,
+          page: response.data.data.page ?? 1,
+          limit: response.data.data.limit ?? (params?.limit || 12),
+          totalPages: response.data.data.totalPages ?? Math.ceil(normalized.length / (params?.limit || 12)),
+        };
       }
     } catch (err) {
-      console.warn('API /api/products unavailable, using fallback mock data', err);
+      console.error('API /api/products request failed:', err);
     }
-
-    // Client fallback filter logic
-    let filtered = [...MOCK_PRODUCTS];
-
-    if (params?.search) {
-      const q = params.search.toLowerCase();
-      filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
-    }
-    if (params?.categoryId) {
-      const catId = params.categoryId;
-      filtered = filtered.filter(p => p.categoryId === catId || p.categoryName?.toLowerCase() === catId.toLowerCase());
-    }
-    if (params?.isFeatured !== undefined) {
-      filtered = filtered.filter(p => p.isFeatured === params.isFeatured);
-    }
-    if (params?.minPrice !== undefined) {
-      filtered = filtered.filter(p => (p.discountPrice || p.basePrice) >= params.minPrice!);
-    }
-    if (params?.maxPrice !== undefined) {
-      filtered = filtered.filter(p => (p.discountPrice || p.basePrice) <= params.maxPrice!);
-    }
-    if (params?.size) {
-      filtered = filtered.filter(p => p.variants?.some(v => v.size.toLowerCase() === params.size!.toLowerCase()));
-    }
-    if (params?.color) {
-      filtered = filtered.filter(p => p.variants?.some(v => v.color.toLowerCase().includes(params.color!.toLowerCase())));
-    }
-
-    if (params?.sortBy === 'price') {
-      filtered.sort((a, b) => {
-        const priceA = a.discountPrice || a.basePrice;
-        const priceB = b.discountPrice || b.basePrice;
-        return params.sortOrder === 'ASC' ? priceA - priceB : priceB - priceA;
-      });
-    } else if (params?.sortBy === 'name') {
-      filtered.sort((a, b) => params.sortOrder === 'DESC' ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name));
-    }
-
-    const page = params?.page || 1;
-    const limit = params?.limit || 12;
-    const startIndex = (page - 1) * limit;
-    const paginatedItems = filtered.slice(startIndex, startIndex + limit);
 
     return {
-      items: paginatedItems,
-      total: filtered.length,
-      page,
-      limit,
-      totalPages: Math.ceil(filtered.length / limit) || 1,
+      items: [],
+      total: 0,
+      page: params?.page || 1,
+      limit: params?.limit || 12,
+      totalPages: 0,
     };
   },
 
-  // Get product by slug
-  async getProductBySlug(slug: string): Promise<Product> {
+  // Get product by slug directly from live API
+  async getProductBySlug(slug: string): Promise<Product | null> {
     try {
       const response = await axiosInstance.get<ApiResponse<any>>(`/api/products/slug/${slug}`);
       if (response.data.success && response.data.data) {
         return normalizeProduct(response.data.data);
       }
     } catch (err) {
-      console.warn(`API /api/products/slug/${slug} fallback to mock`, err);
+      console.warn(`API /api/products/slug/${slug} error:`, err);
     }
 
-    const found = MOCK_PRODUCTS.find(p => p.slug === slug);
-    if (found) return found;
-    return MOCK_PRODUCTS[0];
+    // Try finding by list if slug lookup had formatting discrepancy
+    try {
+      const all = await this.getProducts({ limit: 50 });
+      const found = all.items.find(p => p.slug === slug || p.name.toLowerCase() === slug.toLowerCase());
+      if (found) return found;
+      return all.items[0] || null;
+    } catch {
+      return null;
+    }
   },
 
-  // Get product by ID
-  async getProductById(id: string): Promise<Product> {
+  // Get product by ID directly from live API
+  async getProductById(id: string): Promise<Product | null> {
     try {
       const response = await axiosInstance.get<ApiResponse<any>>(`/api/products/${id}`);
       if (response.data.success && response.data.data) {
         return normalizeProduct(response.data.data);
       }
     } catch (err) {
-      console.warn(`API /api/products/${id} fallback to mock`, err);
+      console.warn(`API /api/products/${id} error:`, err);
     }
 
-    const found = MOCK_PRODUCTS.find(p => p.id === id);
-    if (found) return found;
-    return MOCK_PRODUCTS[0];
+    return null;
   },
 };
 

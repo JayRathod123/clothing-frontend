@@ -132,26 +132,26 @@ export function ProductInfo({ product }: ProductInfoProps) {
   return (
     <div className="space-y-6 text-neutral-900">
       {/* 1. Title */}
-      <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 leading-snug">
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-neutral-900 leading-tight font-heading">
         {product.name}
       </h1>
 
       {/* 2. Pricing Row */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3.5 flex-wrap">
         {discountPercent ? (
           <>
-            <span className="text-base sm:text-lg text-neutral-400 line-through">
+            <span className="text-lg sm:text-xl text-neutral-400 line-through font-medium">
               {formatPrice(originalPrice)}
             </span>
-            <span className="text-2xl sm:text-3xl font-extrabold text-neutral-900">
+            <span className="text-3xl sm:text-4xl font-black text-neutral-900">
               {formatPrice(currentPrice)}
             </span>
-            <span className="bg-neutral-100 text-neutral-800 text-xs font-bold px-2.5 py-1 rounded-sm border border-neutral-200">
+            <span className="bg-neutral-100 text-neutral-900 text-xs sm:text-sm font-extrabold px-3 py-1 rounded-sm border border-neutral-200">
               Save -{discountPercent}%
             </span>
           </>
         ) : (
-          <span className="text-2xl sm:text-3xl font-extrabold text-neutral-900">
+          <span className="text-3xl sm:text-4xl font-black text-neutral-900">
             {formatPrice(currentPrice)}
           </span>
         )}
@@ -160,19 +160,19 @@ export function ProductInfo({ product }: ProductInfoProps) {
       <hr className="border-neutral-200" />
 
       {/* 3. Real-time Urgency Widget */}
-      <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800">
-        <Eye className="w-4 h-4 text-neutral-600" />
+      <div className="flex items-center gap-2.5 text-sm font-semibold text-neutral-800">
+        <Eye className="w-4 h-4 text-neutral-700" />
         <span>
-          <strong className="font-extrabold text-black">18</strong> people are viewing this right now.
+          <strong className="font-black text-black">18</strong> people are viewing this right now.
         </span>
       </div>
 
       <hr className="border-neutral-200" />
 
       {/* 4. Metadata Details */}
-      <div className="space-y-2 text-xs">
+      <div className="space-y-2.5 text-sm">
         <div className="flex items-center gap-4">
-          <span className="text-neutral-500 font-medium w-24">Availability:</span>
+          <span className="text-neutral-500 font-medium w-28">Availability:</span>
           <span className="font-bold text-neutral-900">
             {selectedVariant.stockQuantity && selectedVariant.stockQuantity > 0
               ? `${selectedVariant.stockQuantity} left in stock`
@@ -180,12 +180,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-neutral-500 font-medium w-24">Vendor:</span>
-          <span className="font-medium text-neutral-900">Inkstyles</span>
+          <span className="text-neutral-500 font-medium w-28">Vendor:</span>
+          <span className="font-semibold text-neutral-900">Inkstyles</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-neutral-500 font-medium w-24">Type:</span>
-          <span className="font-medium text-neutral-900">
+          <span className="text-neutral-500 font-medium w-28">Type:</span>
+          <span className="font-semibold text-neutral-900">
             {product.fit || 'Oversize'}
           </span>
         </div>
@@ -194,8 +194,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
       <hr className="border-neutral-200" />
 
       {/* 5. Size Selector (Square boxed outline pills) */}
-      <div className="space-y-2.5">
-        <div className="flex items-center gap-4 text-xs font-semibold">
+      <div className="space-y-3">
+        <div className="flex items-center gap-4 text-sm font-bold">
           <span className="text-neutral-900 w-16">Size :</span>
           <div className="flex items-center gap-2 flex-wrap">
             {sizes.map((size) => {
@@ -205,9 +205,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   key={size}
                   type="button"
                   onClick={() => handleSizeSelect(size)}
-                  className={`w-10 h-10 flex items-center justify-center text-xs font-bold transition-all rounded-xs focus:outline-none ${
+                  className={`w-11 h-11 flex items-center justify-center text-sm font-bold transition-all rounded-xs focus:outline-none cursor-pointer ${
                     isSelected
-                      ? 'bg-black text-white'
+                      ? 'bg-black text-white shadow-xs'
                       : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200'
                   }`}
                 >
@@ -221,8 +221,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* 6. Color Selector (Square swatch) */}
       {colors.length > 0 && (
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-4 text-xs font-semibold">
+        <div className="space-y-3">
+          <div className="flex items-center gap-4 text-sm font-bold">
             <span className="text-neutral-900 w-16">Color :</span>
             <div className="flex items-center gap-2.5">
               {colors.map(([colorName, hex]) => {
@@ -233,7 +233,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     type="button"
                     title={colorName}
                     onClick={() => handleColorSelect(colorName)}
-                    className={`w-8 h-8 rounded-sm border-2 transition-all p-0.5 ${
+                    className={`w-9 h-9 rounded-sm border-2 transition-all p-0.5 cursor-pointer ${
                       isSelected
                         ? 'border-black ring-1 ring-black'
                         : 'border-neutral-300 hover:border-neutral-500'
@@ -259,17 +259,17 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <button
               type="button"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-10 h-12 flex items-center justify-center text-base font-semibold hover:bg-neutral-100 transition-colors"
+              className="w-12 h-14 flex items-center justify-center text-lg font-semibold hover:bg-neutral-100 transition-colors cursor-pointer"
             >
               -
             </button>
-            <span className="w-10 text-center text-sm font-bold select-none">
+            <span className="w-12 text-center text-base font-extrabold select-none">
               {quantity}
             </span>
             <button
               type="button"
               onClick={() => setQuantity(quantity + 1)}
-              className="w-10 h-12 flex items-center justify-center text-base font-semibold hover:bg-neutral-100 transition-colors"
+              className="w-12 h-14 flex items-center justify-center text-lg font-semibold hover:bg-neutral-100 transition-colors cursor-pointer"
             >
               +
             </button>
@@ -280,9 +280,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
             type="button"
             onClick={handleAddToCart}
             disabled={addToCart.isPending}
-            className="flex-1 h-12 bg-[#212121] hover:bg-neutral-950 text-white text-xs font-bold uppercase tracking-wider rounded-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
+            className="flex-1 h-14 bg-[#212121] hover:bg-neutral-950 text-white text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-xs flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingCart className="w-5 h-5" />
             <span>Add to cart</span>
           </button>
         </div>
@@ -291,18 +291,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <button
           type="button"
           onClick={handleBuyNow}
-          className="w-full h-12 bg-black hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xs transition-colors shadow-xs"
+          className="w-full h-14 bg-black hover:bg-neutral-900 text-white text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-xs transition-colors shadow-xs cursor-pointer"
         >
           Buy it now
         </button>
       </div>
 
       {/* 8. Secondary Actions (Wishlist, Compare, Ask Question, Size Chart) */}
-      <div className="pt-2 flex items-center justify-between text-xs text-neutral-700 border-b border-neutral-200 pb-4">
+      <div className="pt-2 flex items-center justify-between text-sm text-neutral-800 border-b border-neutral-200 pb-4">
         <button
           type="button"
           onClick={handleWishlistToggle}
-          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer"
         >
           <Heart
             className={`w-4 h-4 ${
@@ -315,7 +315,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <button
           type="button"
           onClick={() => showToast('Product added to comparison list')}
-          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer"
         >
           <ArrowLeftRight className="w-4 h-4" />
           <span>Compare</span>
@@ -324,7 +324,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <button
           type="button"
           onClick={() => setIsQuestionModalOpen(true)}
-          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer"
         >
           <Mail className="w-4 h-4" />
           <span>Ask a Question</span>
@@ -333,7 +333,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <button
           type="button"
           onClick={() => setIsSizeGuideOpen(true)}
-          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer"
         >
           <Ruler className="w-4 h-4" />
           <span>Size Chart</span>
@@ -342,11 +342,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* 9. Estimated Delivery Date & Pincode Checker */}
       <div className="space-y-3 pt-2">
-        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800">
+        <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
           <Truck className="w-5 h-5 text-neutral-900 shrink-0" />
           <span>
             Estimated Delivery Date :{' '}
-            <strong className="font-bold text-black">22 - 24 September, 2026.</strong>
+            <strong className="font-extrabold text-black">22 - 24 September, 2026.</strong>
           </span>
         </div>
 
@@ -357,22 +357,22 @@ export function ProductInfo({ product }: ProductInfoProps) {
             value={pincode}
             onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
             placeholder="Enter Delivery Pincode"
-            className="flex-1 bg-white border border-neutral-300 rounded-sm px-3.5 py-2 text-xs text-neutral-900 focus:outline-none focus:border-black"
+            className="flex-1 bg-white border border-neutral-300 rounded-sm px-4 py-2.5 text-sm text-neutral-900 focus:outline-none focus:border-black font-medium"
           />
           <button
             type="submit"
             disabled={isCheckingPin || pincode.length !== 6}
-            className="px-4 py-2 bg-neutral-900 text-white font-bold text-xs rounded-sm hover:bg-black disabled:opacity-50 transition-colors"
+            className="px-5 py-2.5 bg-neutral-900 text-white font-extrabold text-sm rounded-sm hover:bg-black disabled:opacity-50 transition-colors cursor-pointer"
           >
             {isCheckingPin ? 'Checking...' : 'Check'}
           </button>
         </form>
 
         {pincodeResult && (
-          <div className="p-2.5 bg-neutral-50 border border-neutral-200 text-xs rounded-sm">
+          <div className="p-3 bg-neutral-50 border border-neutral-200 text-sm rounded-sm">
             <p className="font-semibold text-neutral-900">{pincodeResult.message}</p>
             {pincodeResult.codAvailable && (
-              <span className="text-[11px] text-emerald-700 block mt-0.5">
+              <span className="text-xs font-semibold text-emerald-700 block mt-1">
                 ✓ Cash on Delivery (COD) available for this pincode
               </span>
             )}
@@ -382,10 +382,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* 10. Return Rules Summary */}
       <div className="space-y-2 pt-2 border-t border-neutral-200">
-        <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wide">
+        <h4 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wide">
           Return rules summary
         </h4>
-        <ul className="space-y-1.5 text-xs text-neutral-600 list-disc list-inside">
+        <ul className="space-y-1.5 text-sm text-neutral-700 list-disc list-inside leading-relaxed">
           <li>Returns accepted within 7 days of delivery.</li>
           <li>Free return shipping on eligible items.</li>
           <li>No returns on custom or personalized items.</li>
@@ -395,41 +395,41 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* 11. Guaranteed Safe Checkout */}
       <div className="space-y-2 pt-3 border-t border-neutral-200">
-        <h4 className="text-xs font-bold text-neutral-900">
+        <h4 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wide">
           Guaranteed safe checkout
         </h4>
         <div className="flex items-center gap-2 flex-wrap pt-1">
-          <span className="bg-white border border-neutral-300 text-black text-[10px] font-black px-2 py-1 rounded-xs">
+          <span className="bg-white border border-neutral-300 text-black text-xs font-black px-2.5 py-1 rounded-xs">
             amazon pay
           </span>
-          <span className="bg-[#002663] text-white text-[10px] font-bold px-2 py-1 rounded-xs">
+          <span className="bg-[#002663] text-white text-xs font-bold px-2.5 py-1 rounded-xs">
             AMEX
           </span>
-          <span className="bg-white border border-neutral-300 text-black text-[10px] font-bold px-2 py-1 rounded-xs">
+          <span className="bg-white border border-neutral-300 text-black text-xs font-bold px-2.5 py-1 rounded-xs">
             G Pay
           </span>
-          <span className="bg-white border border-neutral-300 text-black text-[10px] font-bold px-2 py-1 rounded-xs">
+          <span className="bg-white border border-neutral-300 text-black text-xs font-bold px-2.5 py-1 rounded-xs">
             Mastercard
           </span>
-          <span className="bg-[#003087] text-white text-[10px] font-bold px-2 py-1 rounded-xs">
+          <span className="bg-[#003087] text-white text-xs font-bold px-2.5 py-1 rounded-xs">
             PayPal
           </span>
-          <span className="bg-[#1A1F71] text-white text-[10px] font-extrabold px-2 py-1 rounded-xs">
+          <span className="bg-[#1A1F71] text-white text-xs font-extrabold px-2.5 py-1 rounded-xs">
             VISA
           </span>
         </div>
       </div>
 
       {/* 12. Social Share */}
-      <div className="flex items-center gap-4 text-xs text-neutral-600 pt-2 border-t border-neutral-200">
-        <span className="font-semibold text-neutral-800">Share:</span>
-        <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-black">
+      <div className="flex items-center gap-4 text-sm text-neutral-600 pt-2 border-t border-neutral-200">
+        <span className="font-bold text-neutral-900">Share:</span>
+        <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">
           Facebook
         </a>
-        <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-black">
+        <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">
           Twitter
         </a>
-        <a href="https://pinterest.com" target="_blank" rel="noreferrer" className="hover:text-black">
+        <a href="https://pinterest.com" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">
           Pinterest
         </a>
       </div>

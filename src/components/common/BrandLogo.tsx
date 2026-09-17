@@ -31,7 +31,7 @@ export function BrandLogo({ className = '', size = 'md', showTagline = true }: B
 
       {showTagline && (
         <span className={`font-serif italic text-neutral-800 tracking-wider -mt-0.5 ${
-          isSm ? 'text-[9px]' : isLg ? 'text-xs' : 'text-[10px]'
+          isSm ? 'text-[11px]' : isLg ? 'text-sm' : 'text-xs'
         }`}>
           Action of being
         </span>

@@ -1,7 +1,7 @@
 import axiosInstance from '@/lib/axiosInstance';
 import { Wishlist, WishlistItem } from '@/types/wishlist.types';
 import { ApiResponse } from '@/types/api.types';
-import { MOCK_PRODUCTS } from '@/constants/mockData';
+import { productService } from './product.service';
 import { cartService } from './cart.service';
 
 const LOCAL_WISHLIST_KEY = 'aura_local_wishlist';
@@ -29,11 +29,11 @@ export const wishlistService = {
   async getWishlist(): Promise<Wishlist> {
     try {
       const response = await axiosInstance.get<ApiResponse<Wishlist>>('/api/wishlist');
-      if (response.data.success && response.data.data?.items?.length > 0) {
+      if (response.data.success && response.data.data) {
         return response.data.data;
       }
     } catch (err) {
-      console.warn('API /api/wishlist fallback', err);
+      // 401 unauthenticated users use local storage wishlist
     }
     return getLocalWishlist();
   },
@@ -49,11 +49,13 @@ export const wishlistService = {
         return response.data.data;
       }
     } catch (err) {
-      console.warn('API /api/wishlist/items fallback', err);
+      // Guest fallback to local storage
     }
 
     const wl = getLocalWishlist();
-    const product = MOCK_PRODUCTS.find(p => p.id === productId) || MOCK_PRODUCTS[0];
+    const product = await productService.getProductById(productId);
+    if (!product) return wl;
+
     const variant = variantId ? product.variants.find(v => v.id === variantId) : product.variants[0];
 
     if (!wl.items.some(i => i.productId === productId)) {
@@ -64,41 +66,39 @@ export const wishlistService = {
         variantId: variant?.id,
         product,
         variant,
-        addedAt: new Date().toISOString()
+        addedAt: new Date().toISOString(),
       };
-      wl.items.push(item);
-      wl.totalItems = wl.items.length;
-      saveLocalWishlist(wl);
+      const updated = {
+        ...wl,
+        items: [...wl.items, item],
+        totalItems: wl.items.length + 1,
+      };
+      saveLocalWishlist(updated);
+      return updated;
     }
+
     return wl;
   },
 
   // Remove item from wishlist
-  async removeItem(itemId: string): Promise<Wishlist> {
+  async removeItem(productId: string): Promise<Wishlist> {
     try {
-      const response = await axiosInstance.delete<ApiResponse<Wishlist>>(`/api/wishlist/items/${itemId}`);
+      const response = await axiosInstance.delete<ApiResponse<Wishlist>>(`/api/wishlist/items/${productId}`);
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
     } catch (err) {
-      console.warn(`API /api/wishlist/items/${itemId} fallback`, err);
+      // Fallback to local
     }
 
     const wl = getLocalWishlist();
-    wl.items = wl.items.filter(i => i.id !== itemId && i.productId !== itemId);
-    wl.totalItems = wl.items.length;
-    saveLocalWishlist(wl);
-    return wl;
-  },
-
-  // Move item to cart
-  async moveToCart(itemId: string): Promise<void> {
-    const wl = getLocalWishlist();
-    const item = wl.items.find(i => i.id === itemId || i.productId === itemId);
-    if (item && item.variant) {
-      await cartService.addItem({ variantId: item.variant.id, quantity: 1 });
-      await this.removeItem(itemId);
-    }
+    const updated = {
+      ...wl,
+      items: wl.items.filter(i => i.productId !== productId),
+      totalItems: Math.max(0, wl.items.length - 1),
+    };
+    saveLocalWishlist(updated);
+    return updated;
   },
 
   // Clear wishlist
@@ -107,5 +107,25 @@ export const wishlistService = {
       await axiosInstance.delete('/api/wishlist');
     } catch {}
     saveLocalWishlist({ id: 'wl-local', items: [], totalItems: 0 });
-  }
+  },
+
+  // Move item to cart
+  async moveToCart(itemId: string, variantId?: string): Promise<void> {
+    try {
+      await axiosInstance.post(`/api/wishlist/items/${itemId}/move-to-cart`, { variantId });
+      return;
+    } catch {}
+
+    const targetVariantId = variantId || 'var-1';
+    await cartService.addItem({ variantId: targetVariantId, quantity: 1 });
+    const wl = getLocalWishlist();
+    const updated = {
+      ...wl,
+      items: wl.items.filter(i => i.id !== itemId),
+      totalItems: Math.max(0, wl.items.length - 1),
+    };
+    saveLocalWishlist(updated);
+  },
 };
+
+export default wishlistService;

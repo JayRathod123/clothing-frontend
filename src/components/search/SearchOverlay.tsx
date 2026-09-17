@@ -5,13 +5,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useUI } from '@/context/UIContext';
 import { useSearch } from '@/hooks/useSearch';
+import { useCategories } from '@/hooks/useCategories';
+import { useCollections } from '@/hooks/useCollections';
 import { formatPrice } from '@/utils/formatters';
 import { Search, X, ArrowRight } from 'lucide-react';
-import { MOCK_CATEGORIES, MOCK_COLLECTIONS } from '@/constants/mockData';
 
 export function SearchOverlay() {
   const { isSearchOpen, closeSearch } = useUI();
   const { searchTerm, setSearchTerm, results, isLoading, total } = useSearch('');
+  const { data: categories = [] } = useCategories();
+  const { data: collections = [] } = useCollections();
   const inputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -119,14 +122,14 @@ export function SearchOverlay() {
           {searchTerm.trim().length >= 2 ? (
             /* Live Results */
             <div className="space-y-6">
-              <div className="flex items-center justify-between text-xs text-[#686868] border-b border-[#E6E3DD] pb-3">
+              <div className="flex items-center justify-between text-sm text-neutral-600 border-b border-[#E6E3DD] pb-3">
                 <span>
                   {isLoading ? 'Searching...' : `Found ${total} pieces for "${searchTerm}"`}
                 </span>
                 <Link
                   href={`/shop?search=${encodeURIComponent(searchTerm)}`}
                   onClick={closeSearch}
-                  className="text-[11px] font-semibold tracking-wider uppercase text-[#171717] hover:text-[#8A6A45] transition-colors"
+                  className="text-xs font-bold tracking-wider uppercase text-neutral-900 hover:text-sky-600 transition-colors"
                 >
                   View all in shop →
                 </Link>
@@ -139,7 +142,7 @@ export function SearchOverlay() {
                       key={product.id}
                       href={`/product/${product.slug}`}
                       onClick={closeSearch}
-                      className="group flex items-center gap-3.5 bg-white p-3 border border-[#E6E3DD] hover:border-[#171717] transition-all"
+                      className="group flex items-center gap-3.5 bg-white p-3 border border-neutral-200 hover:border-black transition-all shadow-2xs"
                     >
                       <div className="relative w-16 h-20 bg-[#EFEEE9] shrink-0 overflow-hidden">
                         {product.primaryImage ? (
@@ -153,13 +156,13 @@ export function SearchOverlay() {
                         ) : null}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] uppercase tracking-wider text-[#929292]">
+                        <p className="text-xs uppercase tracking-wider text-neutral-400 font-medium">
                           {product.categoryName || 'Garment'}
                         </p>
-                        <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#8A6A45] transition-colors truncate">
+                        <h4 className="text-sm font-bold text-neutral-900 group-hover:text-sky-600 transition-colors truncate">
                           {product.name}
                         </h4>
-                        <p className="text-xs font-medium text-[#171717] mt-1">
+                        <p className="text-sm font-extrabold text-neutral-900 mt-1">
                           {formatPrice(product.discountPrice || product.basePrice)}
                         </p>
                       </div>
@@ -168,8 +171,8 @@ export function SearchOverlay() {
                 </div>
               ) : (
                 <div className="py-16 text-center space-y-2">
-                  <p className="text-sm font-semibold text-[#171717]">No pieces found</p>
-                  <p className="text-xs text-[#686868]">
+                  <p className="text-base font-bold text-neutral-900">No pieces found</p>
+                  <p className="text-sm text-neutral-500">
                     Try searching for keywords like "tee", "cotton", "overshirt", or "trouser".
                   </p>
                 </div>
@@ -180,7 +183,7 @@ export function SearchOverlay() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {/* Popular Searches */}
               <div className="space-y-4">
-                <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#929292]">
+                <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-neutral-900">
                   Trending Searches
                 </h4>
                 <div className="flex flex-wrap gap-2">
@@ -188,7 +191,7 @@ export function SearchOverlay() {
                     <button
                       key={term}
                       onClick={() => setSearchTerm(term)}
-                      className="text-xs px-3 py-1.5 bg-white border border-[#E6E3DD] text-[#171717] hover:border-[#171717] hover:bg-[#171717] hover:text-white transition-all cursor-pointer"
+                      className="text-xs sm:text-sm font-medium px-3.5 py-2 bg-white border border-neutral-300 text-neutral-900 hover:border-black hover:bg-black hover:text-white transition-all cursor-pointer"
                     >
                       {term}
                     </button>
@@ -197,44 +200,48 @@ export function SearchOverlay() {
               </div>
 
               {/* Quick Categories */}
-              <div className="space-y-4">
-                <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#929292]">
-                  Categories
-                </h4>
-                <div className="space-y-2 text-xs">
-                  {MOCK_CATEGORIES.map((cat) => (
-                    <Link
-                      key={cat.id}
-                      href={`/category/${cat.slug}`}
-                      onClick={closeSearch}
-                      className="flex items-center justify-between py-1 text-[#171717] hover:text-[#8A6A45] transition-colors border-b border-[#E6E3DD]/50"
-                    >
-                      <span>{cat.name}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#929292]" />
-                    </Link>
-                  ))}
+              {categories.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-neutral-900">
+                    Categories
+                  </h4>
+                  <div className="space-y-2.5 text-sm">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/category/${cat.slug}`}
+                        onClick={closeSearch}
+                        className="flex items-center justify-between py-1.5 text-neutral-800 hover:text-black font-medium transition-colors border-b border-neutral-200/50"
+                      >
+                        <span>{cat.name}</span>
+                        <ArrowRight className="w-4 h-4 text-neutral-400" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Featured Series */}
-              <div className="space-y-4">
-                <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#929292]">
-                  Curated Series
-                </h4>
-                <div className="space-y-2 text-xs">
-                  {MOCK_COLLECTIONS.map((col) => (
-                    <Link
-                      key={col.id}
-                      href={`/collections/${col.slug}`}
-                      onClick={closeSearch}
-                      className="flex items-center justify-between py-1 text-[#171717] hover:text-[#8A6A45] transition-colors border-b border-[#E6E3DD]/50"
-                    >
-                      <span>{col.name}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#929292]" />
-                    </Link>
-                  ))}
+              {collections.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-neutral-900">
+                    Curated Series
+                  </h4>
+                  <div className="space-y-2.5 text-sm">
+                    {collections.map((col) => (
+                      <Link
+                        key={col.id}
+                        href={`/collections/${col.slug}`}
+                        onClick={closeSearch}
+                        className="flex items-center justify-between py-1.5 text-neutral-800 hover:text-black font-medium transition-colors border-b border-neutral-200/50"
+                      >
+                        <span>{col.name}</span>
+                        <ArrowRight className="w-4 h-4 text-neutral-400" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

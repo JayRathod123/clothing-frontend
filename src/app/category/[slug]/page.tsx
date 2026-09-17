@@ -1,6 +1,5 @@
 import { ProductListingView } from '@/components/product/ProductListingView';
-import { MOCK_CATEGORIES } from '@/constants/mockData';
-import { notFound } from 'next/navigation';
+import { categoryService } from '@/services/category.service';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -10,32 +9,22 @@ interface CategoryPageProps {
 
 export async function generateMetadata({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = MOCK_CATEGORIES.find((c) => c.slug === slug);
+  const category = await categoryService.getCategoryBySlug(slug);
   return {
-    title: `${category?.name || 'Category'} | AURA STUDIO`,
-    description: category?.description || 'Contemporary menswear silhouettes and essentials.',
+    title: `${category?.name || 'Category'} | INKSTYLES`,
+    description: category?.description || 'Contemporary silhouettes and essentials.',
   };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = MOCK_CATEGORIES.find((c) => c.slug === slug);
-
-  if (!category) {
-    // If not found in mock, still render nicely or return 404
-    return (
-      <ProductListingView
-        title={slug.replace('-', ' ').toUpperCase()}
-        subtitle="Everyday silhouettes engineered for contemporary rotation."
-      />
-    );
-  }
+  const category = await categoryService.getCategoryBySlug(slug);
 
   return (
     <ProductListingView
-      title={category.name.toUpperCase()}
-      subtitle={category.description}
-      initialCategoryId={category.id}
+      title={(category?.name || slug.replace('-', ' ')).toUpperCase()}
+      subtitle={category?.description || 'Everyday silhouettes engineered for contemporary rotation.'}
+      initialCategoryId={category?.id}
     />
   );
 }

@@ -122,20 +122,20 @@ export function CartDrawer() {
                       <Link
                         href={`/product/${item.productSlug || 'oversized-essential-tee'}`}
                         onClick={closeCart}
-                        className="text-xs font-semibold text-[#171717] hover:text-[#8A6A45] transition-colors leading-snug line-clamp-2"
+                        className="text-sm font-bold text-neutral-900 hover:text-sky-600 transition-colors leading-snug line-clamp-2"
                       >
                         {item.productName}
                       </Link>
                       <button
                         onClick={() => handleRemove(item.id, item.productName || 'item')}
-                        className="text-[#929292] hover:text-red-500 transition-colors p-0.5"
+                        className="text-neutral-400 hover:text-red-500 transition-colors p-0.5 cursor-pointer"
                         aria-label="Remove item"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-2 mt-1 text-[11px] text-[#686868]">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500 font-medium">
                       {item.size ? <span>Size: {item.size}</span> : null}
                       {item.size && item.color ? <span>•</span> : null}
                       {item.color ? <span>Color: {item.color}</span> : null}
@@ -144,26 +144,26 @@ export function CartDrawer() {
 
                   <div className="flex items-center justify-between pt-3">
                     {/* Stepper */}
-                    <div className="inline-flex items-center border border-[#E6E3DD] bg-white h-7">
+                    <div className="inline-flex items-center border border-neutral-300 bg-white h-8">
                       <button
                         onClick={() => handleUpdateQty(item.id, item.quantity, -1)}
-                        className="w-7 h-full flex items-center justify-center text-xs hover:bg-[#EFEEE9] transition-colors"
+                        className="w-8 h-full flex items-center justify-center text-sm font-bold hover:bg-neutral-100 transition-colors cursor-pointer"
                       >
                         –
                       </button>
-                      <span className="w-6 text-center text-xs font-semibold select-none">
+                      <span className="w-7 text-center text-xs sm:text-sm font-bold select-none">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => handleUpdateQty(item.id, item.quantity, 1)}
-                        className="w-7 h-full flex items-center justify-center text-xs hover:bg-[#EFEEE9] transition-colors"
+                        className="w-8 h-full flex items-center justify-center text-sm font-bold hover:bg-neutral-100 transition-colors cursor-pointer"
                       >
                         +
                       </button>
                     </div>
 
                     {/* Item Subtotal */}
-                    <span className="text-xs font-semibold text-[#171717]">
+                    <span className="text-sm sm:text-base font-extrabold text-neutral-900">
                       {formatPrice(item.currentPrice * item.quantity)}
                     </span>
                   </div>
@@ -175,46 +175,46 @@ export function CartDrawer() {
 
         {/* Footer Subtotal & Checkout CTA */}
         {items.length > 0 && (
-          <div className="border-t border-[#E6E3DD] bg-white p-6 space-y-4">
+          <div className="border-t border-neutral-200 bg-white p-6 space-y-4">
             {/* Promo Code Input */}
             <form onSubmit={handleApplyCoupon} className="flex gap-2">
               <div className="relative flex-1">
-                <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#929292]" />
+                <Tag className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                 <input
                   type="text"
                   placeholder="PROMO CODE (e.g. AURA10)"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
-                  className="w-full bg-[#F7F6F2] border border-[#E6E3DD] pl-8 pr-3 py-2 text-[11px] tracking-wider uppercase focus:border-[#171717] focus:outline-none"
+                  className="w-full bg-[#F7F6F2] border border-neutral-300 pl-9 pr-3 py-2.5 text-xs sm:text-sm tracking-wider uppercase focus:border-black focus:outline-none font-medium"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isApplyingCoupon || !couponCode.trim()}
-                className="px-3 py-2 bg-[#171717] text-white text-[10px] uppercase tracking-widest font-semibold hover:bg-black disabled:opacity-50 transition-colors"
+                className="px-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Apply
               </button>
             </form>
 
             {appliedCoupon ? (
-              <div className="flex items-center justify-between text-xs text-[#8A6A45] font-medium">
+              <div className="flex items-center justify-between text-sm text-emerald-700 font-semibold">
                 <span>Voucher ({appliedCoupon})</span>
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
             ) : null}
 
             {/* Price Calculations */}
-            <div className="space-y-1.5 pt-1 text-xs">
-              <div className="flex items-center justify-between text-[#686868]">
+            <div className="space-y-2 pt-1 text-sm">
+              <div className="flex items-center justify-between text-neutral-600 font-medium">
                 <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span className="font-bold text-neutral-900">{formatPrice(subtotal)}</span>
               </div>
-              <div className="flex items-center justify-between text-[#686868]">
+              <div className="flex items-center justify-between text-neutral-600 font-medium">
                 <span>Estimated Shipping</span>
-                <span>{subtotal >= 999 ? 'COMPLIMENTARY' : '₹99'}</span>
+                <span className="font-bold text-neutral-900">{subtotal >= 999 ? 'FREE' : '₹99'}</span>
               </div>
-              <div className="flex items-center justify-between text-sm font-semibold text-[#171717] pt-2 border-t border-[#E6E3DD]">
+              <div className="flex items-center justify-between text-base sm:text-lg font-black text-black pt-2 border-t border-neutral-200">
                 <span>Total</span>
                 <span>{formatPrice(finalTotal)}</span>
               </div>
@@ -227,13 +227,13 @@ export function CartDrawer() {
                 size="lg"
                 fullWidth
                 onClick={handleCheckout}
-                className="h-12 text-xs"
+                className="h-14 text-sm sm:text-base font-extrabold uppercase tracking-wider"
               >
-                Checkout Now <ArrowRight className="w-4 h-4 ml-2" />
+                Checkout Now <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <button
                 onClick={closeCart}
-                className="w-full text-center text-[11px] uppercase tracking-widest text-[#686868] hover:text-[#171717] transition-colors py-1"
+                className="w-full text-center text-xs uppercase font-bold tracking-wider text-neutral-500 hover:text-black transition-colors py-2 cursor-pointer"
               >
                 Continue Browsing
               </button>

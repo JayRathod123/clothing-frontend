@@ -1,7 +1,6 @@
 import axiosInstance from '@/lib/axiosInstance';
 import { Cart, CartItem, AddCartItemDto } from '@/types/cart.types';
 import { ApiResponse } from '@/types/api.types';
-import { MOCK_PRODUCTS } from '@/constants/mockData';
 
 const LOCAL_CART_KEY = 'aura_local_cart_state';
 
@@ -111,25 +110,12 @@ export const cartService = {
     // Local cart simulation fallback
     const cart = getLocalCart();
     
-    // Find matching variant across mock products
-    let foundProduct = MOCK_PRODUCTS[0];
-    let foundVariant = foundProduct.variants[0];
-
-    for (const p of MOCK_PRODUCTS) {
-      const v = p.variants.find(item => item.id === dto.variantId || item.sku === dto.variantId);
-      if (v) {
-        foundProduct = p;
-        foundVariant = v;
-        break;
-      }
-    }
-
-    const price = foundVariant.discountPrice || foundVariant.price || foundProduct.discountPrice || foundProduct.basePrice;
     const existingIndex = cart.items.findIndex(i => i.variantId === dto.variantId);
 
     if (existingIndex > -1) {
       cart.items[existingIndex].quantity += dto.quantity;
     } else {
+      const price = 1699;
       const newItem: CartItem = {
         id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         cartId: cart.id,
@@ -137,14 +123,12 @@ export const cartService = {
         quantity: dto.quantity,
         currentPrice: price,
         priceAtAdd: price,
-        productName: foundProduct.name,
-        productSlug: foundProduct.slug,
-        productImage: foundProduct.primaryImage,
-        size: foundVariant.size,
-        color: foundVariant.color,
-        variant: foundVariant,
+        productName: 'T-Shirt',
+        productSlug: 'dummy-t-shirt',
+        productImage: 'https://res.cloudinary.com/goldenbird-prod/image/upload/v1789558285/products/axktz3n58zw48fjspjcb.jpg',
+        size: 'M',
         isAvailable: true,
-        availableStock: foundVariant.stockQuantity || 25,
+        availableStock: 25,
       };
       cart.items.push(newItem);
     }

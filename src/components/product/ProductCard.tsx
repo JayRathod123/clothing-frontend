@@ -124,11 +124,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {/* Top Badges (InkStyles Capsule Style) */}
         <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none">
           {isSoldOut ? (
-            <span className="bg-[#E03A3A] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-sm shadow-xs">
+            <span className="bg-[#E03A3A] text-white text-xs font-extrabold px-2.5 py-1 rounded-sm shadow-xs uppercase tracking-wider">
               Soldout
             </span>
           ) : discountPercent ? (
-            <span className="bg-white/95 text-neutral-900 border border-neutral-200 text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-xs">
+            <span className="bg-white/95 text-neutral-900 border border-neutral-200 text-xs font-extrabold px-2.5 py-1 rounded-sm shadow-xs tracking-wide">
               -{discountPercent}%
             </span>
           ) : null}
@@ -159,12 +159,12 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           >
             {showQuickAdd ? (
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-neutral-500">
+                <div className="flex items-center justify-between text-xs uppercase font-bold text-neutral-600">
                   <span>Pick Size</span>
                   <button
                     type="button"
                     onClick={() => setShowQuickAdd(false)}
-                    className="hover:text-black"
+                    className="hover:text-black font-bold text-sm px-1"
                   >
                     ✕
                   </button>
@@ -176,7 +176,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                       type="button"
                       onClick={(e) => handleQuickAdd(variant, e)}
                       disabled={variant.stockQuantity <= 0}
-                      className={`h-7 px-2.5 text-[10px] font-bold border transition-all rounded-xs ${
+                      className={`h-8 px-3 text-xs font-bold border transition-all rounded-xs ${
                         variant.stockQuantity <= 0
                           ? 'border-neutral-200 text-neutral-300 opacity-40 cursor-not-allowed'
                           : 'border-neutral-800 text-neutral-900 hover:bg-black hover:text-white'
@@ -191,9 +191,9 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               <button
                 type="button"
                 onClick={() => setShowQuickAdd(true)}
-                className="w-full py-1.5 flex items-center justify-center gap-1.5 text-xs font-bold text-neutral-900 hover:text-sky-600 transition-colors"
+                className="w-full py-1.5 flex items-center justify-center gap-1.5 text-sm font-bold text-neutral-900 hover:text-sky-600 transition-colors"
               >
-                <ShoppingCart className="w-3.5 h-3.5" />
+                <ShoppingCart className="w-4 h-4" />
                 <span>Quick Add</span>
               </button>
             )}
@@ -202,15 +202,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       </div>
 
       {/* Product Info (Centered InkStyles Style) */}
-      <div className="pt-3 pb-2 px-1 flex flex-col items-center text-center">
+      <div className="pt-3.5 pb-2 px-1 flex flex-col items-center text-center">
         {/* Star rating with emerald teal stars matching Judge.me */}
-        <div className="flex items-center gap-1 mb-1">
+        <div className="flex items-center gap-1.5 mb-1.5">
           <div className="flex items-center text-[#0F766E]">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3 h-3 fill-[#0F766E] text-[#0F766E]" />
+              <Star key={i} className="w-3.5 h-3.5 fill-[#0F766E] text-[#0F766E]" />
             ))}
           </div>
-          <span className="text-[11px] text-neutral-500 font-medium">
+          <span className="text-xs text-neutral-600 font-semibold">
             {product.reviewCount || 1} review
           </span>
         </div>
@@ -218,7 +218,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         {/* Product Title */}
         <Link
           href={`/product/${product.slug}`}
-          className="text-xs sm:text-[13px] font-semibold text-neutral-900 hover:text-sky-600 transition-colors line-clamp-2 min-h-[36px] max-w-[90%]"
+          className="text-sm sm:text-base font-bold text-neutral-900 hover:text-sky-600 transition-colors line-clamp-2 min-h-[42px] max-w-[95%] leading-snug"
         >
           {product.name}
         </Link>
@@ -227,15 +227,15 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         <div className="mt-1 flex items-center gap-2">
           {product.discountPrice && product.discountPrice < product.basePrice ? (
             <>
-              <span className="text-xs text-neutral-400 line-through">
+              <span className="text-xs sm:text-sm text-neutral-400 line-through font-medium">
                 {formatPrice(product.basePrice)}
               </span>
-              <span className="text-sm font-bold text-neutral-900">
+              <span className="text-base sm:text-lg font-black text-neutral-900">
                 {formatPrice(product.discountPrice)}
               </span>
             </>
           ) : (
-            <span className="text-sm font-bold text-neutral-900">
+            <span className="text-base sm:text-lg font-black text-neutral-900">
               {formatPrice(product.basePrice)}
             </span>
           )}

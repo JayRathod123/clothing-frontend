@@ -25,10 +25,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
           {/* COLUMN 1: About Us */}
           <div className="space-y-4">
-            <h4 className="text-base font-bold text-white tracking-tight">
+            <h4 className="text-lg font-black text-white tracking-tight font-heading">
               About Us.
             </h4>
-            <p className="text-xs text-neutral-400 leading-relaxed">
+            <p className="text-sm text-neutral-300 leading-relaxed font-normal">
               Inkstyles is your premier destination for custom streetwear, heavyweight oversized t-shirts, and unique graphic designs. We specialize in providing both oversized and regular fit unisex tees engineered for supreme comfort and enduring style.
             </p>
 
@@ -38,7 +38,7 @@ export function Footer() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
+                className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
                 aria-label="Facebook"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ export function Footer() {
                 href="https://pinterest.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
+                className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
                 aria-label="Pinterest"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@ export function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
+                className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
                 aria-label="Twitter"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@ export function Footer() {
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
+                className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
                 aria-label="LinkedIn"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -82,7 +82,7 @@ export function Footer() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
+                className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center hover:text-white hover:border-white transition-colors"
                 aria-label="Instagram"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -94,10 +94,10 @@ export function Footer() {
 
           {/* COLUMN 2: Quick Links */}
           <div className="space-y-4">
-            <h4 className="text-base font-bold text-white tracking-tight">
+            <h4 className="text-lg font-black text-white tracking-tight font-heading">
               Quick Link
             </h4>
-            <ul className="space-y-2 text-xs text-neutral-400">
+            <ul className="space-y-2.5 text-sm text-neutral-300 font-medium">
               <li>
                 <Link href="/search" className="hover:text-white transition-colors">
                   Search
@@ -133,10 +133,10 @@ export function Footer() {
 
           {/* COLUMN 3: Information */}
           <div className="space-y-4">
-            <h4 className="text-base font-bold text-white tracking-tight">
+            <h4 className="text-lg font-black text-white tracking-tight font-heading">
               Information
             </h4>
-            <ul className="space-y-2 text-xs text-neutral-400">
+            <ul className="space-y-2.5 text-sm text-neutral-300 font-medium">
               <li>
                 <Link href="/contact" className="hover:text-white transition-colors">
                   Contact Us
@@ -167,14 +167,14 @@ export function Footer() {
 
           {/* COLUMN 4: Newsletter & We Accept */}
           <div className="space-y-4">
-            <h4 className="text-base font-bold text-white tracking-tight">
+            <h4 className="text-lg font-black text-white tracking-tight font-heading">
               Newsletter
             </h4>
-            <p className="text-xs text-neutral-400 leading-relaxed">
+            <p className="text-sm text-neutral-300 leading-relaxed font-normal">
               Subscribe to our weekly Newsletter and receive updates via email.
             </p>
 
-            <form onSubmit={handleSubscribe} className="space-y-2">
+            <form onSubmit={handleSubscribe} className="space-y-2.5">
               <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="email"
@@ -182,36 +182,36 @@ export function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@example.com"
-                  className="bg-white text-black px-3.5 py-2.5 text-xs rounded-sm focus:outline-none flex-1 placeholder:text-neutral-500"
+                  className="bg-white text-black px-4 py-3 text-sm rounded-sm focus:outline-none flex-1 placeholder:text-neutral-500 font-medium"
                 />
                 <button
                   type="submit"
-                  className="bg-neutral-800 text-white font-bold text-xs px-4 py-2.5 rounded-sm hover:bg-neutral-700 transition-colors whitespace-nowrap"
+                  className="bg-neutral-800 text-white font-extrabold text-sm px-5 py-3 rounded-sm hover:bg-neutral-700 transition-colors whitespace-nowrap cursor-pointer"
                 >
-                  {isSubscribed ? 'Subscribed!' : 'Get 20% off now'}
+                  {isSubscribed ? 'Subscribed!' : 'Get 20% off'}
                 </button>
               </div>
             </form>
 
             <div className="pt-4 space-y-2">
-              <h5 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h5 className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider">
                 We Accept
               </h5>
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Amazon Pay Badge */}
-                <span className="bg-white text-black text-[10px] font-black px-2.5 py-1 rounded-sm">
+                <span className="bg-white text-black text-xs font-black px-3 py-1 rounded-sm">
                   amazon pay
                 </span>
                 {/* GPay */}
-                <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded-sm">
+                <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-sm">
                   G Pay
                 </span>
                 {/* Mastercard */}
-                <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded-sm">
+                <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-sm">
                   Mastercard
                 </span>
                 {/* Visa */}
-                <span className="bg-[#1A1F71] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-sm">
+                <span className="bg-[#1A1F71] text-white text-xs font-extrabold px-3 py-1 rounded-sm">
                   VISA
                 </span>
               </div>
@@ -220,7 +220,7 @@ export function Footer() {
         </div>
 
         {/* BOTTOM SUB-FOOTER */}
-        <div className="pt-8 border-t border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+        <div className="pt-8 border-t border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-neutral-400">
           <p>© {new Date().getFullYear()}, {THEME.store.name}. All Rights Reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="/about#privacy" className="hover:text-white transition-colors">

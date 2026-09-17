@@ -40,9 +40,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'text-[11px] px-3.5 py-2 tracking-widest gap-2',
-      md: 'text-xs px-5 py-3 tracking-widest gap-2.5',
-      lg: 'text-xs px-8 py-4 tracking-widest gap-3',
+      sm: 'text-xs px-4 py-2 font-bold tracking-wider gap-2',
+      md: 'text-sm px-6 py-3 font-extrabold tracking-wider gap-2.5',
+      lg: 'text-sm sm:text-base px-8 py-3.5 font-extrabold tracking-wider gap-3',
     };
 
     return (

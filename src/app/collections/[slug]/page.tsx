@@ -1,5 +1,5 @@
 import { ProductListingView } from '@/components/product/ProductListingView';
-import { MOCK_COLLECTIONS } from '@/constants/mockData';
+import { collectionService } from '@/services/collection.service';
 
 interface CollectionPageProps {
   params: Promise<{
@@ -9,16 +9,16 @@ interface CollectionPageProps {
 
 export async function generateMetadata({ params }: CollectionPageProps) {
   const { slug } = await params;
-  const collection = MOCK_COLLECTIONS.find((c) => c.slug === slug);
+  const collection = await collectionService.getCollectionBySlug(slug);
   return {
-    title: `${collection?.name || 'Curated Series'} | AURA STUDIO`,
-    description: collection?.description || 'Curated fashion series and seasonal editorial drops.',
+    title: `${collection?.name || 'Curated Series'} | INKSTYLES`,
+    description: collection?.description || 'Curated fashion series and seasonal drops.',
   };
 }
 
 export default async function CollectionPage({ params }: CollectionPageProps) {
   const { slug } = await params;
-  const collection = MOCK_COLLECTIONS.find((c) => c.slug === slug);
+  const collection = await collectionService.getCollectionBySlug(slug);
 
   return (
     <ProductListingView
