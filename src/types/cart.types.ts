@@ -26,6 +26,8 @@ export interface CartItem {
   productImage?: string;
   size?: string;
   color?: string;
+  isAvailable?: boolean;
+  availableStock?: number;
 }
 
 export interface Cart {

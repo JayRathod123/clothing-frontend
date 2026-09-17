@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, ReactNode } from 'react';
 
 interface Toast {
   id: string;
@@ -36,18 +36,20 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const toastCounterRef = useRef(0);
 
-  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    toastCounterRef.current += 1;
+    const id = `toast_${toastCounterRef.current}`;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       removeToast(id);
     }, 3500);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, [removeToast]);
 
   return (
     <UIContext.Provider

@@ -177,27 +177,28 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="py-12 md:py-20 bg-[#F7F6F2]">
+    <div className="py-10 md:py-16 bg-[#F8F9FA]">
       <Container>
         {/* Back Link */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Link
-            href="/shop"
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#686868] hover:text-[#171717] transition-colors"
+            href="/cart"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-600 hover:text-black transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Shopping</span>
+            <span>Return to Cart</span>
           </Link>
         </div>
 
         <form onSubmit={handleSubmitOrder}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             {/* Left Column: Shipping & Payment (7 Cols) */}
-            <div className="lg:col-span-7 space-y-10">
+            <div className="lg:col-span-7 space-y-6">
               {/* Step 1: Customer Info */}
-              <div className="space-y-4 bg-white p-6 border border-[#E6E3DD]">
-                <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#171717]">
-                  01 // Client Information
+              <div className="space-y-4 bg-white p-6 rounded-xl border border-neutral-200 shadow-xs">
+                <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center font-bold">1</span>
+                  <span>Contact Information</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
@@ -231,10 +232,11 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Step 2: Shipping Destination */}
-              <div className="space-y-4 bg-white p-6 border border-[#E6E3DD]">
-                <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#171717]">
-                  02 // Delivery Destination
+              {/* Step 2: Address */}
+              <div className="space-y-4 bg-white p-6 rounded-xl border border-neutral-200 shadow-xs">
+                <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center font-bold">2</span>
+                  <span>Shipping Address</span>
                 </h3>
                 <div className="space-y-4">
                   <Input
@@ -283,16 +285,17 @@ export default function CheckoutPage() {
               </div>
 
               {/* Step 3: Payment Method */}
-              <div className="space-y-4 bg-white p-6 border border-[#E6E3DD]">
-                <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#171717]">
-                  03 // Payment Protocol
+              <div className="space-y-4 bg-white p-6 rounded-xl border border-neutral-200 shadow-xs">
+                <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center font-bold">3</span>
+                  <span>Payment Method</span>
                 </h3>
                 <div className="space-y-2.5">
                   <label
-                    className={`flex items-center justify-between p-4 border cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
                       paymentMethod === 'razorpay'
-                        ? 'border-[#171717] bg-[#F7F6F2]'
-                        : 'border-[#E6E3DD] hover:border-[#929292]'
+                        ? 'border-black bg-neutral-50'
+                        : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -301,25 +304,25 @@ export default function CheckoutPage() {
                         name="payment"
                         checked={paymentMethod === 'razorpay'}
                         onChange={() => setPaymentMethod('razorpay')}
-                        className="accent-[#171717]"
+                        className="accent-black"
                       />
                       <div>
-                        <p className="text-xs font-semibold text-[#171717]">
-                          Razorpay Secure Checkout
+                        <p className="text-xs font-bold text-neutral-900">
+                          Online Payment (Cards / UPI / NetBanking)
                         </p>
-                        <p className="text-[11px] text-[#686868]">
-                          UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, NetBanking
+                        <p className="text-[11px] text-neutral-500">
+                          Instant confirmation • Extra ₹50 off on Prepaid
                         </p>
                       </div>
                     </div>
-                    <CreditCard className="w-4 h-4 text-[#686868]" />
+                    <CreditCard className="w-4 h-4 text-neutral-600" />
                   </label>
 
                   <label
-                    className={`flex items-center justify-between p-4 border cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
                       paymentMethod === 'cod'
-                        ? 'border-[#171717] bg-[#F7F6F2]'
-                        : 'border-[#E6E3DD] hover:border-[#929292]'
+                        ? 'border-black bg-neutral-50'
+                        : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -328,10 +331,10 @@ export default function CheckoutPage() {
                         name="payment"
                         checked={paymentMethod === 'cod'}
                         onChange={() => setPaymentMethod('cod')}
-                        className="accent-[#171717]"
+                        className="accent-black"
                       />
                       <div>
-                        <p className="text-xs font-semibold text-[#171717]">
+                        <p className="text-xs font-bold text-neutral-900">
                           Cash on Delivery (COD)
                         </p>
                         <p className="text-[11px] text-[#686868]">
@@ -346,16 +349,16 @@ export default function CheckoutPage() {
             </div>
 
             {/* Right Column: Order Summary (5 Cols) */}
-            <div className="lg:col-span-5 bg-white p-6 border border-[#E6E3DD] space-y-6">
-              <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#171717] border-b border-[#E6E3DD] pb-4">
-                Order Summary ({items.length} {items.length === 1 ? 'Piece' : 'Pieces'})
+            <div className="lg:col-span-5 bg-white p-6 rounded-xl border border-neutral-200 shadow-xs space-y-6">
+              <h3 className="text-sm font-bold text-neutral-900 border-b border-neutral-200 pb-4">
+                Order Summary ({items.length} {items.length === 1 ? 'item' : 'items'})
               </h3>
 
               {/* Items List */}
-              <div className="divide-y divide-[#E6E3DD] max-h-72 overflow-y-auto pr-1">
+              <div className="divide-y divide-neutral-200 max-h-72 overflow-y-auto pr-1">
                 {items.map((item) => (
                   <div key={item.id} className="py-3 flex gap-3 items-center">
-                    <div className="relative w-14 h-18 bg-[#EFEEE9] shrink-0 border border-[#E6E3DD]">
+                    <div className="relative w-14 h-18 bg-neutral-100 rounded-lg overflow-hidden shrink-0 border border-neutral-200">
                       {item.productImage && (
                         <Image
                           src={item.productImage}
@@ -380,19 +383,19 @@ export default function CheckoutPage() {
               </div>
 
               {/* Coupon Section */}
-              <div className="pt-2 border-t border-[#E6E3DD]">
+              <div className="pt-2 border-t border-neutral-200">
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="VOUCHER (e.g. AURA10)"
+                    placeholder="COUPON (e.g. FIRST10)"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 bg-[#F7F6F2] border border-[#E6E3DD] px-3 py-2 text-xs uppercase tracking-wider focus:outline-none focus:border-[#171717]"
+                    className="flex-1 bg-neutral-50 border border-neutral-300 rounded-sm px-3 py-2 text-xs uppercase tracking-wider focus:outline-none focus:border-black"
                   />
                   <button
                     type="button"
                     onClick={handleApplyCoupon}
-                    className="px-4 py-2 bg-[#171717] text-white text-[10px] uppercase tracking-widest font-semibold hover:bg-black"
+                    className="px-4 py-2 bg-black text-white text-xs font-bold rounded-sm hover:bg-neutral-800"
                   >
                     Apply
                   </button>
@@ -400,23 +403,23 @@ export default function CheckoutPage() {
               </div>
 
               {/* Totals */}
-              <div className="space-y-2 text-xs pt-2 border-t border-[#E6E3DD]">
-                <div className="flex justify-between text-[#686868]">
+              <div className="space-y-2 text-xs pt-2 border-t border-neutral-200">
+                <div className="flex justify-between text-neutral-600">
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-[#686868]">
+                <div className="flex justify-between text-neutral-600">
                   <span>Shipping</span>
-                  <span>{shippingCharge === 0 ? 'COMPLIMENTARY' : formatPrice(shippingCharge)}</span>
+                  <span>{shippingCharge === 0 ? 'FREE' : formatPrice(shippingCharge)}</span>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-[#8A6A45] font-medium">
-                    <span>Voucher ({appliedCoupon})</span>
+                  <div className="flex justify-between text-emerald-700 font-bold">
+                    <span>Coupon ({appliedCoupon})</span>
                     <span>-{formatPrice(discountAmount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-semibold text-[#171717] pt-2 border-t border-[#E6E3DD]">
-                  <span>Final Total</span>
+                <div className="flex justify-between text-base font-extrabold text-neutral-900 pt-2 border-t border-neutral-200">
+                  <span>Total Amount</span>
                   <span>{formatPrice(totalAmount)}</span>
                 </div>
               </div>

@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product, ProductVariant } from '@/types/product.types';
-import { Price } from '@/components/common/Price';
+import { formatPrice } from '@/utils/formatters';
 import { useAddToCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useUI } from '@/context/UIContext';
-import { Heart } from 'lucide-react';
+import { Heart, Star, ShoppingCart } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -17,10 +17,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
-    product.variants[0] || {}
-  );
-  const [showQuickAddSizes, setShowQuickAddSizes] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const addToCart = useAddToCart();
   const { isItemInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -28,14 +25,23 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
   const isFavorited = isItemInWishlist(product.id);
 
-  // Determine images
-  const primaryImg = product.primaryImage || (product.images && product.images[0]?.url) || '';
+  // Fallback image handling
+  const primaryImg = product.primaryImage || (product.images && product.images[0]?.url) || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1200';
   const secondaryImg = product.secondaryImage || (product.images && product.images[1]?.url) || primaryImg;
 
-  // Extract unique colors for color indicators
+  // Stock status
+  const totalStock = product.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) ?? 25;
+  const isSoldOut = totalStock <= 0;
+
+  // Discount percentage
+  const discountPercent = product.discountPrice && product.basePrice > product.discountPrice
+    ? Math.round(((product.basePrice - product.discountPrice) / product.basePrice) * 100)
+    : null;
+
+  // Color options
   const uniqueColors = Array.from(
     new Map(
-      product.variants.map((v) => [v.color, v.colorHex || '#171717'])
+      (product.variants || []).map((v) => [v.color, v.colorHex || '#171717'])
     ).entries()
   );
 
@@ -48,11 +54,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         variantId: variant.id,
         quantity: 1,
       });
-      showToast(`Added ${product.name} (${variant.size}) to bag`);
+      showToast(`Added ${product.name} (${variant.size}) to cart`);
       openCart();
-      setShowQuickAddSizes(false);
+      setShowQuickAdd(false);
     } catch {
-      showToast('Could not add to bag', 'error');
+      showToast('Could not add to cart', 'error');
     }
   };
 
@@ -64,161 +70,193 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       await removeFromWishlist(product.id);
       showToast('Removed from wishlist', 'info');
     } else {
-      await addToWishlist({ productId: product.id, variantId: selectedVariant.id });
-      showToast('Saved to wishlist');
+      await addToWishlist({ productId: product.id, variantId: product.variants[0]?.id });
+      showToast('Added to wishlist');
     }
   };
 
   return (
     <div
-      className="group relative flex flex-col"
+      className="group relative flex flex-col bg-white rounded-xl transition-all duration-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
-        setShowQuickAddSizes(false);
+        setShowQuickAdd(false);
       }}
     >
-      {/* Product Image Container */}
-      <div className="relative aspect-3/4 w-full overflow-hidden bg-[#EFEEE9]">
-        <Link href={`/product/${product.slug}`} className="block w-full h-full">
+      {/* Product Image Container with Soft Rounded Grey Box matching InkStyles */}
+      <div className="relative aspect-4/5 w-full overflow-hidden rounded-xl bg-[#F2F4F7] border border-neutral-100">
+        <Link href={`/product/${product.slug}`} className="block w-full h-full relative">
           {/* Primary Image */}
           <div
-            className={`absolute inset-0 transition-opacity duration-300 ease-out ${
+            className={`absolute inset-0 transition-opacity duration-300 ${
               isHovered && secondaryImg ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            {primaryImg ? (
-              <Image
-                src={primaryImg}
-                alt={product.name}
-                fill
-                priority={priority}
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                className="object-cover object-center transform transition-transform duration-500 ease-out group-hover:scale-103"
-              />
-            ) : null}
+            <Image
+              src={primaryImg}
+              alt={product.name}
+              fill
+              priority={priority}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
+            />
           </div>
 
-          {/* Secondary Editorial Image (Swaps on hover) */}
-          {secondaryImg ? (
+          {/* Secondary Hover Image */}
+          {secondaryImg && (
             <div
-              className={`absolute inset-0 transition-opacity duration-300 ease-out ${
+              className={`absolute inset-0 transition-opacity duration-300 ${
                 isHovered ? 'opacity-100' : 'opacity-0'
               }`}
             >
               <Image
                 src={secondaryImg}
-                alt={`${product.name} view`}
+                alt={`${product.name} alternate view`}
                 fill
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                className="object-cover object-center transform transition-transform duration-500 ease-out group-hover:scale-103"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-          ) : null}
+          )}
         </Link>
 
-        {/* Wishlist Button */}
+        {/* Top Badges (InkStyles Capsule Style) */}
+        <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none">
+          {isSoldOut ? (
+            <span className="bg-[#E03A3A] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-sm shadow-xs">
+              Soldout
+            </span>
+          ) : discountPercent ? (
+            <span className="bg-white/95 text-neutral-900 border border-neutral-200 text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-xs">
+              -{discountPercent}%
+            </span>
+          ) : null}
+        </div>
+
+        {/* Wishlist Toggle Button (Top-Left) */}
         <button
+          type="button"
           onClick={handleWishlistToggle}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-[#171717] hover:bg-white transition-all shadow-xs"
-          aria-label="Save to Wishlist"
+          className="absolute top-2.5 left-2.5 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-neutral-700 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-xs"
+          aria-label={isFavorited ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
-              isFavorited ? 'fill-[#171717] text-[#171717]' : 'text-[#171717]'
+              isFavorited ? 'fill-red-600 text-red-600' : 'text-neutral-700'
             }`}
           />
         </button>
 
-        {/* GSM / Fabric Badge if available */}
-        {product.gsm ? (
-          <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-xs px-2 py-0.5 text-[9px] font-semibold tracking-wider text-[#171717] uppercase">
-            {product.gsm} GSM
-          </div>
-        ) : null}
-
         {/* Quick Add Overlay on Hover */}
-        <div
-          className={`absolute bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-xs border-t border-[#E6E3DD] p-2.5 transition-all duration-300 ease-out ${
-            isHovered
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 translate-y-2 pointer-events-none'
-          }`}
-        >
-          {showQuickAddSizes ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-[#686868]">
-                <span>Select Size</span>
-                <button
-                  onClick={() => setShowQuickAddSizes(false)}
-                  className="hover:text-[#171717]"
-                >
-                  Close
-                </button>
-              </div>
-              <div className="flex items-center gap-1.5 justify-center">
-                {product.variants.map((variant) => (
+        {!isSoldOut && (
+          <div
+            className={`absolute bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-neutral-100 p-2 transition-all duration-300 ${
+              isHovered
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-2 pointer-events-none'
+            }`}
+          >
+            {showQuickAdd ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] uppercase font-bold text-neutral-500">
+                  <span>Pick Size</span>
                   <button
-                    key={variant.id}
-                    onClick={(e) => handleQuickAdd(variant, e)}
-                    disabled={variant.stockQuantity <= 0}
-                    className={`h-7 px-2 text-[10px] font-medium border uppercase transition-colors ${
-                      variant.stockQuantity <= 0
-                        ? 'border-[#E6E3DD] text-[#929292] opacity-40 cursor-not-allowed'
-                        : 'border-[#171717] text-[#171717] hover:bg-[#171717] hover:text-white'
-                    }`}
+                    type="button"
+                    onClick={() => setShowQuickAdd(false)}
+                    className="hover:text-black"
                   >
-                    {variant.size}
+                    ✕
                   </button>
-                ))}
+                </div>
+                <div className="flex items-center gap-1.5 justify-center flex-wrap">
+                  {product.variants.map((variant) => (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={(e) => handleQuickAdd(variant, e)}
+                      disabled={variant.stockQuantity <= 0}
+                      className={`h-7 px-2.5 text-[10px] font-bold border transition-all rounded-xs ${
+                        variant.stockQuantity <= 0
+                          ? 'border-neutral-200 text-neutral-300 opacity-40 cursor-not-allowed'
+                          : 'border-neutral-800 text-neutral-900 hover:bg-black hover:text-white'
+                      }`}
+                    >
+                      {variant.size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowQuickAddSizes(true)}
-              className="w-full py-1.5 text-center text-[10px] uppercase font-semibold tracking-widest text-[#171717] hover:text-[#8A6A45] transition-colors"
-            >
-              + Quick Add
-            </button>
-          )}
-        </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowQuickAdd(true)}
+                className="w-full py-1.5 flex items-center justify-center gap-1.5 text-xs font-bold text-neutral-900 hover:text-sky-600 transition-colors"
+              >
+                <ShoppingCart className="w-3.5 h-3.5" />
+                <span>Quick Add</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Product Information */}
-      <div className="pt-3 pb-1 flex flex-col gap-1">
+      {/* Product Info (Centered InkStyles Style) */}
+      <div className="pt-3 pb-2 px-1 flex flex-col items-center text-center">
+        {/* Star rating with emerald teal stars matching Judge.me */}
+        <div className="flex items-center gap-1 mb-1">
+          <div className="flex items-center text-[#0F766E]">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-3 h-3 fill-[#0F766E] text-[#0F766E]" />
+            ))}
+          </div>
+          <span className="text-[11px] text-neutral-500 font-medium">
+            {product.reviewCount || 1} review
+          </span>
+        </div>
+
+        {/* Product Title */}
         <Link
           href={`/product/${product.slug}`}
-          className="text-xs font-medium tracking-tight text-[#171717] hover:text-[#8A6A45] transition-colors truncate"
+          className="text-xs sm:text-[13px] font-semibold text-neutral-900 hover:text-sky-600 transition-colors line-clamp-2 min-h-[36px] max-w-[90%]"
         >
           {product.name}
         </Link>
 
-        {/* Pricing */}
-        <Price
-          price={product.basePrice}
-          discountPrice={product.discountPrice}
-          size="sm"
-        />
+        {/* Pricing: Strikethrough base + Bold discounted */}
+        <div className="mt-1 flex items-center gap-2">
+          {product.discountPrice && product.discountPrice < product.basePrice ? (
+            <>
+              <span className="text-xs text-neutral-400 line-through">
+                {formatPrice(product.basePrice)}
+              </span>
+              <span className="text-sm font-bold text-neutral-900">
+                {formatPrice(product.discountPrice)}
+              </span>
+            </>
+          ) : (
+            <span className="text-sm font-bold text-neutral-900">
+              {formatPrice(product.basePrice)}
+            </span>
+          )}
+        </div>
 
-        {/* Color Indicators */}
+        {/* Color Swatch Dots */}
         {uniqueColors.length > 0 && (
-          <div className="flex items-center gap-1 pt-0.5">
+          <div className="flex items-center justify-center gap-1.5 mt-2">
             {uniqueColors.map(([colorName, hex]) => (
               <span
                 key={colorName}
                 title={colorName}
-                className="w-2.5 h-2.5 rounded-full border border-black/10"
+                className="w-3 h-3 rounded-full border border-neutral-300 shadow-2xs inline-block"
                 style={{ backgroundColor: hex }}
               />
             ))}
-            {uniqueColors.length > 1 && (
-              <span className="text-[10px] text-[#929292] ml-1">
-                {uniqueColors.length} colors
-              </span>
-            )}
           </div>
         )}
       </div>
     </div>
   );
 }
+
+export default ProductCard;

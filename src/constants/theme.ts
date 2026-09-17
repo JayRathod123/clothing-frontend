@@ -1,24 +1,38 @@
 export const THEME = {
   colors: {
-    bg: '#F7F6F2',
+    bg: '#FFFFFF',
+    bgSecondary: '#F8F9FA',
+    bgCard: '#F5F5F7',
     white: '#FFFFFF',
-    primary: '#171717',
-    secondary: '#686868',
-    muted: '#929292',
-    border: '#E6E3DD',
-    surface: '#EFEEE9',
-    accent: '#8A6A45',
+    primary: '#111111',
+    secondary: '#666666',
+    muted: '#8A8A8A',
+    border: '#E5EAEE',
+    accent: '#0F766E', // InkStyles rating teal
+    blueAccent: '#0284C7', // Brand logo hanger blue
+    discountBg: '#F2F2F2',
+    soldout: '#FF4D4D',
   },
   thresholds: {
-    freeShipping: 999,
+    freeShipping: 799,
   },
   store: {
-    name: 'AURA STUDIO',
-    tagline: 'Quiet Luxury × Contemporary Silhouette',
-    subtext: 'Everyday elevated essentials crafted with considered fits and heavyweight textiles.',
-    established: '2026',
-    currency: '₹',
-    supportEmail: 'concierge@aurastudio.in',
-    supportPhone: '+91 98765 43210',
+    name: 'INKSTYLES',
+    tagline: 'Action of being',
+    subtext: 'Discover unique graphic T-shirts, oversized tees and trendy tops at Inkstyles. Bold designs, quality prints and styles for men & women who want to stand out.',
+    established: '2024',
+    currency: 'Rs. ',
+    currencySymbol: '₹',
+    supportEmail: 'support@inkstyles.in',
+    supportPhone: '+91-9235831306',
+    address: 'Inkstyles Hub, Sector 63, Noida, Uttar Pradesh 201301',
+    announcements: [
+      '🔥 FREE SHIPPING ON PREPAID ORDERS',
+      '⚡ 10% OFF ON YOUR FIRST ORDER - CODE: FIRST10',
+      '📦 CASH ON DELIVERY AVAILABLE NATIONWIDE',
+      '✨ NEW ARRIVALS: OVERSIZED & GRAPHIC DROP IS LIVE',
+    ],
   }
 };
+
+export default THEME;

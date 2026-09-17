@@ -3,19 +3,23 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product, ProductVariant } from '@/types/product.types';
-import { Price } from '@/components/common/Price';
-import { RatingStars } from '@/components/common/RatingStars';
-import { Button } from '@/components/ui/Button';
-import { Accordion } from '@/components/ui/Accordion';
-import { SizeSelector } from './SizeSelector';
-import { ColorSwatches } from './ColorSwatches';
+import { formatPrice } from '@/utils/formatters';
 import { SizeGuideModal } from './SizeGuideModal';
 import { useAddToCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useUI } from '@/context/UIContext';
 import { shippingService } from '@/services/shipping.service';
 import { PincodeServiceability } from '@/types/shipping.types';
-import { Heart, Truck, RotateCcw, ShieldCheck, MapPin } from 'lucide-react';
+import {
+  Heart,
+  ShoppingCart,
+  Eye,
+  Truck,
+  ArrowLeftRight,
+  Mail,
+  Ruler,
+  Check,
+} from 'lucide-react';
 
 interface ProductInfoProps {
   product: Product;
@@ -28,8 +32,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
   );
   const [quantity, setQuantity] = useState(1);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [questionSent, setQuestionSent] = useState(false);
 
-  // Pincode checker state
+  // Pincode checker
   const [pincode, setPincode] = useState('');
   const [isCheckingPin, setIsCheckingPin] = useState(false);
   const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
@@ -39,6 +45,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const { openCart, showToast } = useUI();
 
   const isFavorited = isItemInWishlist(product.id);
+
+  // Discount calculation
+  const currentPrice = selectedVariant.discountPrice || selectedVariant.price || product.discountPrice || product.basePrice;
+  const originalPrice = selectedVariant.price || product.basePrice;
+  const discountPercent = originalPrice > currentPrice
+    ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
+    : null;
+
+  // Available sizes
+  const sizes = Array.from(new Set(product.variants.map((v) => v.size)));
+  // Available colors
+  const colors = Array.from(
+    new Map(product.variants.map((v) => [v.color, v.colorHex || '#171717'])).entries()
+  );
 
   const handleSizeSelect = (size: string) => {
     const matching = product.variants.find(
@@ -60,10 +80,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
         variantId: selectedVariant.id,
         quantity,
       });
-      showToast(`Added ${quantity}x ${product.name} (${selectedVariant.size}) to bag`);
+      showToast(`Added ${quantity}x ${product.name} (${selectedVariant.size}) to cart`);
       openCart();
     } catch {
-      showToast('Unable to add item to bag', 'error');
+      showToast('Unable to add item to cart', 'error');
     }
   };
 
@@ -109,257 +129,382 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }
   };
 
-  const accordionItems = [
-    {
-      id: 'details',
-      title: 'DETAILS & CONSTRUCTION',
-      content: (
-        <ul className="list-disc list-inside space-y-1 text-xs">
-          {product.details?.map((detail, idx) => (
-            <li key={idx}>{detail}</li>
-          )) || <li>Double-needle reinforced construction</li>}
-        </ul>
-      ),
-    },
-    {
-      id: 'fabric',
-      title: 'FABRIC & SPECIFICATIONS',
-      content: (
-        <div className="space-y-1.5 text-xs">
-          <p>
-            <strong className="text-[#171717]">Composition:</strong>{' '}
-            {product.fabric || '100% Combed Heavyweight Cotton'}
-          </p>
-          {product.gsm ? (
-            <p>
-              <strong className="text-[#171717]">Weight / Density:</strong>{' '}
-              {product.gsm} GSM Custom Milled Fabric
-            </p>
-          ) : null}
-          <p>
-            <strong className="text-[#171717]">Fit Profile:</strong>{' '}
-            {product.fit || 'Relaxed Architectural Silhouette'}
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: 'care',
-      title: 'CARE INSTRUCTIONS',
-      content: (
-        <ul className="list-disc list-inside space-y-1 text-xs">
-          {product.careInstructions?.map((care, idx) => (
-            <li key={idx}>{care}</li>
-          )) || (
-            <>
-              <li>Machine wash cold inside-out</li>
-              <li>Hang dry in shade to preserve color & structural integrity</li>
-              <li>Warm iron inside out if necessary</li>
-            </>
-          )}
-        </ul>
-      ),
-    },
-    {
-      id: 'shipping',
-      title: 'SHIPPING & COMPLIMENTARY RETURNS',
-      content: (
-        <div className="space-y-2 text-xs">
-          <p>
-            Complimentary shipping on orders above ₹999. Standard flat rate ₹99 applied for
-            subtotals below threshold.
-          </p>
-          <p>
-            Hassle-free 7-day doorstep exchange and return policy for unworn items with original
-            tags attached.
-          </p>
-        </div>
-      ),
-    },
-  ];
-
   return (
-    <div className="space-y-8">
-      {/* Title, Category & Ratings */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-[#8A6A45]">
-            {product.categoryName || 'Essentials'}
+    <div className="space-y-6 text-neutral-900">
+      {/* 1. Title */}
+      <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 leading-snug">
+        {product.name}
+      </h1>
+
+      {/* 2. Pricing Row */}
+      <div className="flex items-center gap-3">
+        {discountPercent ? (
+          <>
+            <span className="text-base sm:text-lg text-neutral-400 line-through">
+              {formatPrice(originalPrice)}
+            </span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-neutral-900">
+              {formatPrice(currentPrice)}
+            </span>
+            <span className="bg-neutral-100 text-neutral-800 text-xs font-bold px-2.5 py-1 rounded-sm border border-neutral-200">
+              Save -{discountPercent}%
+            </span>
+          </>
+        ) : (
+          <span className="text-2xl sm:text-3xl font-extrabold text-neutral-900">
+            {formatPrice(currentPrice)}
           </span>
-          <RatingStars rating={product.rating || 4.9} count={product.reviewCount || 120} />
-        </div>
-
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-[#171717]">
-          {product.name}
-        </h1>
-
-        <Price
-          price={selectedVariant.price || product.basePrice}
-          discountPrice={selectedVariant.discountPrice || product.discountPrice}
-          size="lg"
-          className="pt-1"
-        />
+        )}
       </div>
 
-      {/* Editorial Description */}
-      <p className="text-xs md:text-sm text-[#686868] leading-relaxed">
-        {product.description}
-      </p>
+      <hr className="border-neutral-200" />
 
-      {/* Color Swatches */}
-      <ColorSwatches
-        variants={product.variants}
-        selectedColor={selectedVariant.color}
-        onSelectColor={handleColorSelect}
-      />
+      {/* 3. Real-time Urgency Widget */}
+      <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800">
+        <Eye className="w-4 h-4 text-neutral-600" />
+        <span>
+          <strong className="font-extrabold text-black">18</strong> people are viewing this right now.
+        </span>
+      </div>
 
-      {/* Size Selector */}
-      <SizeSelector
-        variants={product.variants}
-        selectedSize={selectedVariant.size}
-        onSelectSize={handleSizeSelect}
-        onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
-      />
+      <hr className="border-neutral-200" />
 
-      {/* Quantity & CTA Buttons */}
+      {/* 4. Metadata Details */}
+      <div className="space-y-2 text-xs">
+        <div className="flex items-center gap-4">
+          <span className="text-neutral-500 font-medium w-24">Availability:</span>
+          <span className="font-bold text-neutral-900">
+            {selectedVariant.stockQuantity && selectedVariant.stockQuantity > 0
+              ? `${selectedVariant.stockQuantity} left in stock`
+              : 'In stock'}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-neutral-500 font-medium w-24">Vendor:</span>
+          <span className="font-medium text-neutral-900">Inkstyles</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-neutral-500 font-medium w-24">Type:</span>
+          <span className="font-medium text-neutral-900">
+            {product.fit || 'Oversize'}
+          </span>
+        </div>
+      </div>
+
+      <hr className="border-neutral-200" />
+
+      {/* 5. Size Selector (Square boxed outline pills) */}
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-4 text-xs font-semibold">
+          <span className="text-neutral-900 w-16">Size :</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {sizes.map((size) => {
+              const isSelected = selectedVariant.size === size;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => handleSizeSelect(size)}
+                  className={`w-10 h-10 flex items-center justify-center text-xs font-bold transition-all rounded-xs focus:outline-none ${
+                    isSelected
+                      ? 'bg-black text-white'
+                      : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200'
+                  }`}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Color Selector (Square swatch) */}
+      {colors.length > 0 && (
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-4 text-xs font-semibold">
+            <span className="text-neutral-900 w-16">Color :</span>
+            <div className="flex items-center gap-2.5">
+              {colors.map(([colorName, hex]) => {
+                const isSelected = selectedVariant.color === colorName;
+                return (
+                  <button
+                    key={colorName}
+                    type="button"
+                    title={colorName}
+                    onClick={() => handleColorSelect(colorName)}
+                    className={`w-8 h-8 rounded-sm border-2 transition-all p-0.5 ${
+                      isSelected
+                        ? 'border-black ring-1 ring-black'
+                        : 'border-neutral-300 hover:border-neutral-500'
+                    }`}
+                  >
+                    <span
+                      className="w-full h-full block rounded-2xs"
+                      style={{ backgroundColor: hex }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Stepper + Add to Cart + Buy it Now */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center gap-3">
-          {/* Quantity Stepper */}
-          <div className="inline-flex items-center border border-[#E6E3DD] bg-white">
+          {/* Stepper [- 1 +] */}
+          <div className="inline-flex items-center border border-neutral-300 rounded-xs bg-white">
             <button
               type="button"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-10 h-12 flex items-center justify-center text-sm font-medium hover:bg-[#EFEEE9] transition-colors"
+              className="w-10 h-12 flex items-center justify-center text-base font-semibold hover:bg-neutral-100 transition-colors"
             >
-              –
+              -
             </button>
-            <span className="w-10 text-center text-xs font-semibold select-none">
+            <span className="w-10 text-center text-sm font-bold select-none">
               {quantity}
             </span>
             <button
               type="button"
               onClick={() => setQuantity(quantity + 1)}
-              className="w-10 h-12 flex items-center justify-center text-sm font-medium hover:bg-[#EFEEE9] transition-colors"
+              className="w-10 h-12 flex items-center justify-center text-base font-semibold hover:bg-neutral-100 transition-colors"
             >
               +
             </button>
           </div>
 
-          {/* Add to Bag Button */}
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onClick={handleAddToCart}
-            isLoading={addToCart.isPending}
-            className="flex-1 h-12"
-          >
-            Add To Bag
-          </Button>
-
-          {/* Wishlist Button */}
+          {/* Add to Cart button (Charcoal with cart icon) */}
           <button
             type="button"
-            onClick={handleWishlistToggle}
-            className={`w-12 h-12 border flex items-center justify-center transition-colors ${
-              isFavorited
-                ? 'border-[#171717] bg-[#171717] text-white'
-                : 'border-[#E6E3DD] bg-white text-[#171717] hover:border-[#171717]'
-            }`}
-            aria-label="Wishlist toggle"
+            onClick={handleAddToCart}
+            disabled={addToCart.isPending}
+            className="flex-1 h-12 bg-[#212121] hover:bg-neutral-950 text-white text-xs font-bold uppercase tracking-wider rounded-xs flex items-center justify-center gap-2 transition-colors shadow-xs"
           >
-            <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+            <ShoppingCart className="w-4 h-4" />
+            <span>Add to cart</span>
           </button>
         </div>
 
-        {/* Buy Now Button */}
-        <Button
-          variant="secondary"
-          size="lg"
-          fullWidth
+        {/* Buy It Now (Full solid black button) */}
+        <button
+          type="button"
           onClick={handleBuyNow}
-          className="h-12"
+          className="w-full h-12 bg-black hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xs transition-colors shadow-xs"
         >
-          Buy It Now
-        </Button>
+          Buy it now
+        </button>
       </div>
 
-      {/* Pincode Serviceability Tool */}
-      <div className="border border-[#E6E3DD] bg-white p-4 space-y-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#171717]">
-          <MapPin className="w-3.5 h-3.5 text-[#8A6A45]" />
-          <span>Delivery & Serviceability Check</span>
+      {/* 8. Secondary Actions (Wishlist, Compare, Ask Question, Size Chart) */}
+      <div className="pt-2 flex items-center justify-between text-xs text-neutral-700 border-b border-neutral-200 pb-4">
+        <button
+          type="button"
+          onClick={handleWishlistToggle}
+          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+        >
+          <Heart
+            className={`w-4 h-4 ${
+              isFavorited ? 'fill-red-600 text-red-600' : 'text-neutral-700'
+            }`}
+          />
+          <span>Add to wishlist</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => showToast('Product added to comparison list')}
+          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+        >
+          <ArrowLeftRight className="w-4 h-4" />
+          <span>Compare</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsQuestionModalOpen(true)}
+          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+        >
+          <Mail className="w-4 h-4" />
+          <span>Ask a Question</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsSizeGuideOpen(true)}
+          className="inline-flex items-center gap-1.5 hover:text-black transition-colors"
+        >
+          <Ruler className="w-4 h-4" />
+          <span>Size Chart</span>
+        </button>
+      </div>
+
+      {/* 9. Estimated Delivery Date & Pincode Checker */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800">
+          <Truck className="w-5 h-5 text-neutral-900 shrink-0" />
+          <span>
+            Estimated Delivery Date :{' '}
+            <strong className="font-bold text-black">22 - 24 September, 2026.</strong>
+          </span>
         </div>
-        <form onSubmit={handleCheckPincode} className="flex gap-2">
+
+        <form onSubmit={handleCheckPincode} className="flex gap-2 max-w-sm">
           <input
             type="text"
             maxLength={6}
-            placeholder="Enter 6-digit Pincode"
             value={pincode}
             onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-            className="flex-1 bg-[#F7F6F2] border border-[#E6E3DD] px-3 py-2 text-xs focus:border-[#171717] focus:outline-none"
+            placeholder="Enter Delivery Pincode"
+            className="flex-1 bg-white border border-neutral-300 rounded-sm px-3.5 py-2 text-xs text-neutral-900 focus:outline-none focus:border-black"
           />
           <button
             type="submit"
-            disabled={isCheckingPin || pincode.length < 6}
-            className="px-4 py-2 bg-[#171717] text-white text-[10px] uppercase tracking-widest font-semibold hover:bg-black disabled:opacity-50"
+            disabled={isCheckingPin || pincode.length !== 6}
+            className="px-4 py-2 bg-neutral-900 text-white font-bold text-xs rounded-sm hover:bg-black disabled:opacity-50 transition-colors"
           >
             {isCheckingPin ? 'Checking...' : 'Check'}
           </button>
         </form>
 
-        {pincodeResult ? (
-          <div
-            className={`text-xs p-2.5 ${
-              pincodeResult.isServiceable
-                ? 'bg-[#EFEEE9] text-[#171717]'
-                : 'bg-red-50 text-red-700'
-            }`}
-          >
-            <p className="font-semibold">
-              {pincodeResult.isServiceable ? '✓ Pincode Serviceable' : '✕ Delivery Unavailable'}
-            </p>
-            <p className="text-[11px] mt-0.5 text-[#686868]">
-              {pincodeResult.message}
-            </p>
+        {pincodeResult && (
+          <div className="p-2.5 bg-neutral-50 border border-neutral-200 text-xs rounded-sm">
+            <p className="font-semibold text-neutral-900">{pincodeResult.message}</p>
+            {pincodeResult.codAvailable && (
+              <span className="text-[11px] text-emerald-700 block mt-0.5">
+                ✓ Cash on Delivery (COD) available for this pincode
+              </span>
+            )}
           </div>
-        ) : null}
+        )}
       </div>
 
-      {/* Brand Guarantees */}
-      <div className="grid grid-cols-3 gap-2 py-2 border-y border-[#E6E3DD] text-center">
-        <div className="space-y-1">
-          <Truck className="w-4 h-4 mx-auto text-[#8A6A45]" />
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#171717]">
-            Fast Dispatch
-          </p>
-          <p className="text-[9px] text-[#929292]">Within 24 Hours</p>
-        </div>
-        <div className="space-y-1">
-          <RotateCcw className="w-4 h-4 mx-auto text-[#8A6A45]" />
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#171717]">
-            Easy Returns
-          </p>
-          <p className="text-[9px] text-[#929292]">7 Days Doorstep</p>
-        </div>
-        <div className="space-y-1">
-          <ShieldCheck className="w-4 h-4 mx-auto text-[#8A6A45]" />
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#171717]">
-            100% Original
-          </p>
-          <p className="text-[9px] text-[#929292]">Studio Certified</p>
+      {/* 10. Return Rules Summary */}
+      <div className="space-y-2 pt-2 border-t border-neutral-200">
+        <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wide">
+          Return rules summary
+        </h4>
+        <ul className="space-y-1.5 text-xs text-neutral-600 list-disc list-inside">
+          <li>Returns accepted within 7 days of delivery.</li>
+          <li>Free return shipping on eligible items.</li>
+          <li>No returns on custom or personalized items.</li>
+          <li>Items must be unworn and in original packaging.</li>
+        </ul>
+      </div>
+
+      {/* 11. Guaranteed Safe Checkout */}
+      <div className="space-y-2 pt-3 border-t border-neutral-200">
+        <h4 className="text-xs font-bold text-neutral-900">
+          Guaranteed safe checkout
+        </h4>
+        <div className="flex items-center gap-2 flex-wrap pt-1">
+          <span className="bg-white border border-neutral-300 text-black text-[10px] font-black px-2 py-1 rounded-xs">
+            amazon pay
+          </span>
+          <span className="bg-[#002663] text-white text-[10px] font-bold px-2 py-1 rounded-xs">
+            AMEX
+          </span>
+          <span className="bg-white border border-neutral-300 text-black text-[10px] font-bold px-2 py-1 rounded-xs">
+            G Pay
+          </span>
+          <span className="bg-white border border-neutral-300 text-black text-[10px] font-bold px-2 py-1 rounded-xs">
+            Mastercard
+          </span>
+          <span className="bg-[#003087] text-white text-[10px] font-bold px-2 py-1 rounded-xs">
+            PayPal
+          </span>
+          <span className="bg-[#1A1F71] text-white text-[10px] font-extrabold px-2 py-1 rounded-xs">
+            VISA
+          </span>
         </div>
       </div>
 
-      {/* Specifications & Care Accordion */}
-      <Accordion items={accordionItems} defaultOpenId="details" />
+      {/* 12. Social Share */}
+      <div className="flex items-center gap-4 text-xs text-neutral-600 pt-2 border-t border-neutral-200">
+        <span className="font-semibold text-neutral-800">Share:</span>
+        <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-black">
+          Facebook
+        </a>
+        <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-black">
+          Twitter
+        </a>
+        <a href="https://pinterest.com" target="_blank" rel="noreferrer" className="hover:text-black">
+          Pinterest
+        </a>
+      </div>
 
       {/* Size Guide Modal */}
       <SizeGuideModal
         isOpen={isSizeGuideOpen}
         onClose={() => setIsSizeGuideOpen(false)}
-        category={product.categoryName}
       />
+
+      {/* Ask Question Modal */}
+      {isQuestionModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setIsQuestionModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-neutral-900">
+                Ask about {product.name}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setIsQuestionModalOpen(false)}
+                className="text-neutral-400 hover:text-black"
+              >
+                ✕
+              </button>
+            </div>
+
+            {questionSent ? (
+              <div className="py-6 text-center text-emerald-600 font-bold text-xs flex items-center justify-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>Your query has been submitted! Our stylists will reply shortly.</span>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setQuestionSent(true);
+                  setTimeout(() => {
+                    setIsQuestionModalOpen(false);
+                    setQuestionSent(false);
+                  }, 2000);
+                }}
+                className="space-y-3 text-xs"
+              >
+                <input
+                  required
+                  type="email"
+                  placeholder="Your Email"
+                  className="w-full p-2.5 border border-neutral-300 rounded-sm"
+                />
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="What would you like to know about sizing, fabric GSM, or delivery?"
+                  className="w-full p-2.5 border border-neutral-300 rounded-sm"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-black text-white font-bold rounded-sm hover:bg-neutral-800"
+                >
+                  Send Query
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default ProductInfo;

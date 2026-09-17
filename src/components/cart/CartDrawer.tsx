@@ -67,7 +67,7 @@ export function CartDrawer() {
     <Drawer
       isOpen={isCartOpen}
       onClose={closeCart}
-      title={`Shopping Bag (${items.reduce((s, i) => s + i.quantity, 0)})`}
+      title={`Your Cart (${items.reduce((s, i) => s + i.quantity, 0)})`}
       width="max-w-md"
     >
       <div className="flex flex-col h-full justify-between -mx-6 -my-6">

@@ -14,28 +14,28 @@ export function ShippingProgressBar({ subtotal }: ShippingProgressBarProps) {
   const percent = Math.min(100, Math.round((subtotal / threshold) * 100));
 
   return (
-    <div className="bg-white border border-[#E6E3DD] p-3.5 space-y-2">
+    <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between text-xs">
         {isFree ? (
-          <div className="flex items-center gap-1.5 text-[#171717] font-medium">
-            <Check className="w-3.5 h-3.5 text-[#8A6A45]" />
-            <span>You have unlocked complimentary shipping!</span>
+          <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <span>You have unlocked Free Shipping!</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-[#686868]">
-            <Sparkles className="w-3.5 h-3.5 text-[#8A6A45]" />
+          <div className="flex items-center gap-1.5 text-neutral-600">
+            <Sparkles className="w-3.5 h-3.5 text-neutral-800" />
             <span>
-              Add <strong className="text-[#171717]">{formatPrice(remaining)}</strong> more for free shipping
+              Add <strong className="text-black">{formatPrice(remaining)}</strong> more for Free Shipping
             </span>
           </div>
         )}
-        <span className="text-[10px] font-semibold text-[#8A6A45]">{percent}%</span>
+        <span className="text-[10px] font-bold text-neutral-800">{percent}%</span>
       </div>
 
-      {/* Minimal Progress Line */}
-      <div className="w-full h-1 bg-[#EFEEE9] overflow-hidden">
+      {/* Progress Line */}
+      <div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#8A6A45] transition-all duration-300 ease-out"
+          className="h-full bg-black transition-all duration-300 ease-out rounded-full"
           style={{ width: `${percent}%` }}
         />
       </div>

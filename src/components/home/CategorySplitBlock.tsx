@@ -1,92 +1,126 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+
+interface CollectionBanner {
+  id: string;
+  tagline: string;
+  title: string;
+  description: string;
+  href: string;
+  image: string;
+}
+
+const COLLECTIONS: CollectionBanner[] = [
+  {
+    id: 'oversized',
+    tagline: 'RELAXED FIT',
+    title: 'Oversized T-Shirt.',
+    description: 'Street-ready drops cut with architectural boxy proportions and heavy drape.',
+    href: '/shop?fit=oversized',
+    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'regular',
+    tagline: 'EVERYDAY COMFORT',
+    title: 'Regular Fit T-Shirt.',
+    description: 'Clean classic cuts crafted from ultra-soft bio-washed combed cotton.',
+    href: '/shop?fit=regular',
+    image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'tops',
+    tagline: 'EVERYDAY STYLE TOP',
+    title: 'Tops Collection.',
+    description: 'Cropped silhouettes and form-accentuating fits designed for effortless movement.',
+    href: '/shop?category=tops',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'tank-tops',
+    tagline: 'LIGHT LAYERS BOLD ATTITUDE',
+    title: 'Tank Top Collection.',
+    description: 'Discover our tank top collection made for movement, comfort, and street-ready style.',
+    href: '/shop?category=tank-tops',
+    image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'hoodies',
+    tagline: 'HOODIE COLLECTION',
+    title: 'Hoodie Collection.',
+    description: 'Premium hoodies built for comfort, warmth, and everyday streetwear style.',
+    href: '/shop?category=hoodies',
+    image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'customized',
+    tagline: 'YOUR IDEA, OUR CREATION',
+    title: 'Costumized T-Shirt.',
+    description: 'Design it your way. From custom graphics to personal messages — make it truly yours.',
+    href: '/shop?category=customized',
+    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1000&auto=format&fit=crop',
+  },
+];
 
 export function CategorySplitBlock() {
   return (
-    <section className="w-full bg-[#171717] text-white">
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E6E3DD]/20">
-        {/* Left Side: 50% T-SHIRTS */}
-        <Link
-          href="/category/t-shirts"
-          className="group relative h-[480px] sm:h-[580px] overflow-hidden flex flex-col justify-end p-8 sm:p-12 block"
-        >
-          {/* Background Image with subtle zoom */}
-          <div className="absolute inset-0">
-            <Image
-              src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1200&auto=format&fit=crop"
-              alt="T-Shirts Category"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10 transition-opacity group-hover:opacity-90" />
-          </div>
+    <section className="w-full bg-[#FFFFFF] py-14 px-4 sm:px-6 lg:px-8 border-t border-neutral-100">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-10 space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+            Shop by Collection
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-500 max-w-xl mx-auto">
+            Explore curated capsules designed for everyday rotation, streetwear confidence, and all-day comfort.
+          </p>
+        </div>
 
-          {/* Editorial Content */}
-          <div className="relative z-10 space-y-3 transform transition-transform duration-300 group-hover:-translate-y-1">
-            <div className="flex items-center gap-2">
-              <span className="editorial-kicker text-[#8A6A45]">CATEGORY 01</span>
-              <span className="text-white/50 text-xs">•</span>
-              <span className="text-xs uppercase tracking-widest text-white/80">240 GSM COTTON</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight uppercase text-white">
-                T-SHIRTS
-              </h3>
-              <div className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 text-white" />
+        {/* 3-Column Dark Mood Banners matching InkStyles */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {COLLECTIONS.map((col) => (
+            <Link
+              key={col.id}
+              href={col.href}
+              className="group relative h-[280px] sm:h-[300px] rounded-2xl overflow-hidden bg-neutral-900 shadow-sm transition-all duration-300 hover:shadow-xl block"
+            >
+              {/* Image side */}
+              <div className="absolute top-0 right-0 bottom-0 w-1/2 overflow-hidden">
+                <Image
+                  src={col.image}
+                  alt={col.title}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 20vw"
+                  className="object-cover object-center transform transition-transform duration-700 group-hover:scale-108"
+                />
               </div>
-            </div>
 
-            <p className="text-xs text-white/70 max-w-sm">
-              Boxy cuts, drop shoulders, and high-density necklines engineered for structural longevity.
-            </p>
-          </div>
-        </Link>
+              {/* Gradient dark wash over the card */}
+              <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-900/90 to-transparent z-10" />
 
-        {/* Right Side: 50% SHIRTS */}
-        <Link
-          href="/category/shirts"
-          className="group relative h-[480px] sm:h-[580px] overflow-hidden flex flex-col justify-end p-8 sm:p-12 block"
-        >
-          {/* Background Image with subtle zoom */}
-          <div className="absolute inset-0">
-            <Image
-              src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1200&auto=format&fit=crop"
-              alt="Shirts Category"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10 transition-opacity group-hover:opacity-90" />
-          </div>
+              {/* Content on the left */}
+              <div className="relative z-20 h-full w-[65%] p-6 sm:p-7 flex flex-col justify-between text-white">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-neutral-400 uppercase block">
+                    {col.tagline}
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white group-hover:text-sky-400 transition-colors leading-tight">
+                    {col.title}
+                  </h3>
+                </div>
 
-          {/* Editorial Content */}
-          <div className="relative z-10 space-y-3 transform transition-transform duration-300 group-hover:-translate-y-1">
-            <div className="flex items-center gap-2">
-              <span className="editorial-kicker text-[#8A6A45]">CATEGORY 02</span>
-              <span className="text-white/50 text-xs">•</span>
-              <span className="text-xs uppercase tracking-widest text-white/80">BRUSHED TWILL</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight uppercase text-white">
-                SHIRTS
-              </h3>
-              <div className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
-                <ArrowRight className="w-4 h-4 text-white" />
+                <div className="space-y-3">
+                  <p className="text-[11px] text-neutral-300 leading-relaxed font-normal line-clamp-3">
+                    {col.description}
+                  </p>
+                  <div className="w-12 h-0.5 bg-neutral-600 group-hover:w-16 group-hover:bg-sky-400 transition-all duration-300" />
+                </div>
               </div>
-            </div>
-
-            <p className="text-xs text-white/70 max-w-sm">
-              Structured overshirts, Cuban camp collars, and utilitarian layers tailored for ease.
-            </p>
-          </div>
-        </Link>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
+
+export default CategorySplitBlock;

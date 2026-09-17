@@ -37,19 +37,59 @@ function saveLocalCart(cart: Cart): void {
   } catch {}
 }
 
+export function normalizeCart(raw: any): Cart {
+  if (!raw) return getLocalCart();
+
+  const items: CartItem[] = (raw.items || []).map((i: any) => {
+    const currentPrice = typeof i.currentPrice === 'string' ? parseFloat(i.currentPrice) : Number(i.currentPrice || i.priceAtAdd || 0);
+    const priceAtAdd = typeof i.priceAtAdd === 'string' ? parseFloat(i.priceAtAdd) : Number(i.priceAtAdd || currentPrice);
+    
+    return {
+      id: i.id,
+      cartId: raw.id,
+      variantId: i.variantId,
+      quantity: Number(i.quantity || 1),
+      currentPrice,
+      priceAtAdd,
+      productName: i.productName || i.product?.name || 'Streetwear Tee',
+      productSlug: i.productSlug || i.product?.slug || '',
+      productImage: i.productImage || i.variant?.imageUrl || i.product?.primaryImage?.url || i.product?.images?.[0]?.url || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1200&auto=format&fit=crop',
+      size: i.size || i.variant?.size || 'M',
+      color: i.color || i.variant?.color || 'Onyx Black',
+      variant: i.variant,
+      product: i.product,
+      isAvailable: i.isAvailable !== false,
+      availableStock: Number(i.availableStock ?? i.variant?.stockQuantity ?? 25),
+    };
+  });
+
+  const subtotal = typeof raw.subtotal === 'string' ? parseFloat(raw.subtotal) : Number(raw.subtotal || 0);
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return {
+    id: raw.id || `cart_${Date.now()}`,
+    sessionId: raw.sessionId,
+    userId: raw.userId,
+    status: raw.status || 'active',
+    subtotal: subtotal || items.reduce((sum, item) => sum + (item.currentPrice * item.quantity), 0),
+    totalUniqueItems: items.length,
+    totalQuantity: raw.totalQuantity || totalQuantity,
+    items,
+  };
+}
+
 export const cartService = {
-  // Get active cart
+  // Get active cart from live API with client fallback
   async getCart(): Promise<Cart> {
     try {
-      const response = await axiosInstance.get<ApiResponse<Cart>>('/api/cart');
+      const response = await axiosInstance.get<ApiResponse<any>>('/api/cart');
       if (response.data.success && response.data.data) {
-        // If API cart has items, return it
-        if (response.data.data.items && response.data.data.items.length > 0) {
-          return response.data.data;
-        }
+        const normalized = normalizeCart(response.data.data);
+        saveLocalCart(normalized);
+        return normalized;
       }
     } catch (err) {
-      console.warn('API /api/cart fallback to client cache', err);
+      console.warn('API /api/cart fallback to client storage', err);
     }
 
     return getLocalCart();
@@ -58,9 +98,11 @@ export const cartService = {
   // Add item to cart
   async addItem(dto: AddCartItemDto): Promise<Cart> {
     try {
-      const response = await axiosInstance.post<ApiResponse<Cart>>('/api/cart/items', dto);
+      const response = await axiosInstance.post<ApiResponse<any>>('/api/cart/items', dto);
       if (response.data.success && response.data.data) {
-        return response.data.data;
+        const normalized = normalizeCart(response.data.data);
+        saveLocalCart(normalized);
+        return normalized;
       }
     } catch (err) {
       console.warn('API /api/cart/items fallback to local simulation', err);
@@ -101,11 +143,12 @@ export const cartService = {
         size: foundVariant.size,
         color: foundVariant.color,
         variant: foundVariant,
+        isAvailable: true,
+        availableStock: foundVariant.stockQuantity || 25,
       };
       cart.items.push(newItem);
     }
 
-    // Recompute totals
     cart.totalQuantity = cart.items.reduce((sum, i) => sum + i.quantity, 0);
     cart.totalUniqueItems = cart.items.length;
     cart.subtotal = cart.items.reduce((sum, i) => sum + (i.currentPrice * i.quantity), 0);
@@ -117,9 +160,11 @@ export const cartService = {
   // Update item quantity
   async updateItemQuantity(itemId: string, quantity: number): Promise<Cart> {
     try {
-      const response = await axiosInstance.patch<ApiResponse<Cart>>(`/api/cart/items/${itemId}`, { quantity });
+      const response = await axiosInstance.patch<ApiResponse<any>>(`/api/cart/items/${itemId}`, { quantity });
       if (response.data.success && response.data.data) {
-        return response.data.data;
+        const normalized = normalizeCart(response.data.data);
+        saveLocalCart(normalized);
+        return normalized;
       }
     } catch (err) {
       console.warn(`API /api/cart/items/${itemId} fallback`, err);
@@ -144,9 +189,11 @@ export const cartService = {
   // Remove item from cart
   async removeItem(itemId: string): Promise<Cart> {
     try {
-      const response = await axiosInstance.delete<ApiResponse<Cart>>(`/api/cart/items/${itemId}`);
+      const response = await axiosInstance.delete<ApiResponse<any>>(`/api/cart/items/${itemId}`);
       if (response.data.success && response.data.data) {
-        return response.data.data;
+        const normalized = normalizeCart(response.data.data);
+        saveLocalCart(normalized);
+        return normalized;
       }
     } catch (err) {
       console.warn(`API /api/cart/items/${itemId} fallback`, err);
@@ -189,7 +236,7 @@ export const cartService = {
       if (response.data.success && response.data.data) {
         return {
           valid: true,
-          discountAmount: response.data.data.discountAmount || 200,
+          discountAmount: Number(response.data.data.discountAmount || 200),
           message: response.data.data.message || `Coupon ${code.toUpperCase()} applied successfully!`
         };
       }
@@ -197,17 +244,19 @@ export const cartService = {
       console.warn('API /api/coupons/apply fallback', err);
     }
 
-    // Default test coupon codes: AURA10 (10% off), WELCOME200 (₹200 off)
+    // Default test coupon codes: KINETIC10 (10% off), DROP200 (₹200 off), AURA10 (10% off)
     const upper = code.trim().toUpperCase();
-    if (upper === 'AURA10') {
+    if (upper === 'KINETIC10' || upper === 'AURA10') {
       const discount = Math.round(cartSubtotal * 0.1);
-      return { valid: true, discountAmount: discount, message: '10% editorial discount applied.' };
+      return { valid: true, discountAmount: discount, message: '10% streetwear drop discount applied.' };
     }
-    if (upper === 'WELCOME200' || upper === 'STUDIO') {
+    if (upper === 'DROP200' || upper === 'WELCOME200' || upper === 'STUDIO') {
       const discount = Math.min(200, cartSubtotal);
       return { valid: true, discountAmount: discount, message: '₹200 welcome voucher applied.' };
     }
 
-    return { valid: false, discountAmount: 0, message: 'Invalid or expired promotional code.' };
+    return { valid: false, discountAmount: 0, message: 'Invalid or expired promotional coupon code.' };
   }
 };
+
+export default cartService;

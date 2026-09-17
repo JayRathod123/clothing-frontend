@@ -1,42 +1,41 @@
 import { HeroBlock } from '@/components/home/HeroBlock';
 import { FeaturedProductsBlock } from '@/components/home/FeaturedProductsBlock';
 import { CategorySplitBlock } from '@/components/home/CategorySplitBlock';
-import { BrandStatementBlock } from '@/components/home/BrandStatementBlock';
-import { ProductStoryBlock } from '@/components/home/ProductStoryBlock';
-import { BestsellersBlock } from '@/components/home/BestsellersBlock';
-import { FabricStoryBlock } from '@/components/home/FabricStoryBlock';
+import { WatchAndBuyBlock } from '@/components/home/WatchAndBuyBlock';
 import { SocialProofBlock } from '@/components/home/SocialProofBlock';
-import { FinalCtaBlock } from '@/components/home/FinalCtaBlock';
+import { TrustBadgesStrip } from '@/components/home/TrustBadgesStrip';
+import { HomeBlogsBlock } from '@/components/home/HomeBlogsBlock';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Graphic T-Shirts, Tops & More | Inkstyles',
+  description:
+    'Discover unique graphic T-shirts, oversized tees and trendy tops at Inkstyles. Bold designs, quality prints and styles for men & women who want to stand out. Shop now.',
+};
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col w-full">
-      {/* Hero section */}
+    <div className="flex flex-col w-full bg-white">
+      {/* 1. Lifestyle Streetwear Hero Carousel */}
       <HeroBlock />
 
-      {/* New Arrivals (Simple, clean, balanced 4-column product grid) */}
+      {/* 2. New Arrivals Collection Grid with Tabs */}
       <FeaturedProductsBlock />
 
-      {/* Category split: T-Shirts & Shirts */}
+      {/* 3. Shop by Collection (3-Column Dark Mood Banners) */}
       <CategorySplitBlock />
 
-      {/* Whitespace-driven Brand Statement */}
-      <BrandStatementBlock />
+      {/* 4. Watch and Buy (Vertical Reels Showcase) */}
+      <WatchAndBuyBlock />
 
-      {/* 'Why This Piece' Product Story */}
-      <ProductStoryBlock />
-
-      {/* Most Wanted Bestsellers */}
-      <BestsellersBlock />
-
-      {/* Fabric & Craftsmanship Material Story */}
-      <FabricStoryBlock />
-
-      {/* Social Proof & Lookbook */}
+      {/* 5. Customer Words (Testimonials with 5-Star Reviews) */}
       <SocialProofBlock />
 
-      {/* Final Call-To-Action */}
-      <FinalCtaBlock />
+      {/* 6. Trust Badges Strip & Give your Feedback Banner */}
+      <TrustBadgesStrip />
+
+      {/* 7. Latest Blog Section */}
+      <HomeBlogsBlock />
     </div>
   );
 }

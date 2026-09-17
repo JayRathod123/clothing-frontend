@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { SearchOverlay } from '@/components/search/SearchOverlay';
 import { AuthModal } from '@/components/common/AuthModal';
+import { THEME } from '@/constants/theme';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,21 +16,23 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'AURA STUDIO | Contemporary Men\'s Silhouette & Essentials',
+  title: `${THEME.store.name} | Heavyweight 240 GSM Streetwear Silhouettes`,
   description:
-    'Quiet luxury meets modern contemporary streetwear. 240 GSM heavyweight combed cotton, relaxed silhouettes, and architectural tailoring for everyday elevation.',
+    'Premium Indian streetwear brand. 240 GSM French Terry heavyweight cotton, oversized drop-shoulder fits, and architectural staples built for everyday confidence.',
   keywords: [
-    'contemporary mens fashion',
-    'quiet luxury',
-    'oversized heavy t-shirt',
+    'streetwear india',
+    'oversized t-shirts',
     '240 gsm cotton',
-    'pleated trousers',
-    'modern streetwear india',
-    'essential menswear',
+    'heavyweight t-shirts',
+    'graphic tees india',
+    'french terry tees',
+    'urban fashion',
+    'kinetic studio',
+    'inkstyles alternative',
   ],
   openGraph: {
-    title: 'AURA STUDIO | Contemporary Men\'s Silhouette & Essentials',
-    description: 'Everyday elevated essentials crafted with considered fits and heavyweight textiles.',
+    title: `${THEME.store.name} | Heavyweight Streetwear Drops`,
+    description: 'Everyday elevated streetwear engineered in 240 GSM combed cotton with architectural boxy drape.',
     type: 'website',
     locale: 'en_IN',
   },
@@ -42,7 +45,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#F7F6F2] text-[#171717]">
+      <body className="min-h-full flex flex-col bg-white text-neutral-900 font-sans selection:bg-black selection:text-white">
         <Providers>
           <AnnouncementBar />
           <Header />

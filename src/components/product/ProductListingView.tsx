@@ -8,7 +8,7 @@ import { Drawer } from '@/components/ui/Drawer';
 import { Button } from '@/components/ui/Button';
 import { useProducts } from '@/hooks/useProducts';
 import { MOCK_CATEGORIES } from '@/constants/mockData';
-import { SlidersHorizontal, Grid3X3, Grid2X2, Check, X } from 'lucide-react';
+import { SlidersHorizontal, Grid3X3, Grid2X2 } from 'lucide-react';
 
 interface ProductListingViewProps {
   title?: string;
@@ -39,11 +39,10 @@ export function ProductListingView({
     maxPrice: priceRange,
   });
 
-  const allProducts = data?.items || [];
-
   // Client-side multi-tag filter refinement (size & color)
   const filteredProducts = useMemo(() => {
-    return allProducts.filter((product) => {
+    const products = data?.items || [];
+    return products.filter((product) => {
       // Filter by size
       if (selectedSizes.length > 0) {
         const hasSize = product.variants.some((v) => selectedSizes.includes(v.size));
@@ -58,7 +57,7 @@ export function ProductListingView({
       }
       return true;
     });
-  }, [allProducts, selectedSizes, selectedColors]);
+  }, [data?.items, selectedSizes, selectedColors]);
 
   const availableSizes = ['S', 'M', 'L', 'XL', '30', '32', '34'];
   const availableColors = [
@@ -97,7 +96,7 @@ export function ProductListingView({
     (priceRange < 5000 ? 1 : 0);
 
   // Shared Filter Controls markup
-  const FilterControls = () => (
+  const renderFilterControls = () => (
     <div className="space-y-8">
       {/* Category Filter */}
       <div className="space-y-3">
@@ -132,7 +131,7 @@ export function ProductListingView({
       </div>
 
       {/* Size Filter */}
-      <div className="space-y-3 border-t border-[#E6E3DD] pt-6">
+      <div className="space-y-3 border-t border-neutral-200 pt-6">
         <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#171717]">
           Sizes
         </h4>
@@ -146,7 +145,7 @@ export function ProductListingView({
                 className={`min-w-8 h-8 px-2 text-[11px] uppercase font-medium border transition-colors ${
                   isSelected
                     ? 'bg-[#171717] text-white border-[#171717]'
-                    : 'bg-white text-[#171717] border-[#E6E3DD] hover:border-[#171717]'
+                    : 'bg-white text-[#171717] border-neutral-200 hover:border-[#171717]'
                 }`}
               >
                 {size}
@@ -157,7 +156,7 @@ export function ProductListingView({
       </div>
 
       {/* Color Filter */}
-      <div className="space-y-3 border-t border-[#E6E3DD] pt-6">
+      <div className="space-y-3 border-t border-neutral-200 pt-6">
         <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#171717]">
           Colors
         </h4>
@@ -180,7 +179,7 @@ export function ProductListingView({
       </div>
 
       {/* Price Range Filter */}
-      <div className="space-y-3 border-t border-[#E6E3DD] pt-6">
+      <div className="space-y-3 border-t border-neutral-200 pt-6">
         <div className="flex items-center justify-between text-[11px] uppercase font-bold tracking-wider text-[#171717]">
           <span>Max Price</span>
           <span>₹{priceRange.toLocaleString('en-IN')}</span>
@@ -202,7 +201,7 @@ export function ProductListingView({
 
       {/* Reset Filters CTA */}
       {activeFilterCount > 0 && (
-        <div className="border-t border-[#E6E3DD] pt-6">
+        <div className="border-t border-neutral-200 pt-6">
           <Button variant="outline" size="sm" fullWidth onClick={handleClearFilters}>
             Reset Filters ({activeFilterCount})
           </Button>
@@ -212,28 +211,25 @@ export function ProductListingView({
   );
 
   return (
-    <div className="py-12 md:py-16 bg-[#F7F6F2]">
+    <div className="py-10 md:py-14 bg-white">
       <Container>
-        {/* Editorial Top Title & Subtitle */}
-        <div className="space-y-3 pb-8 border-b border-[#E6E3DD]">
-          <span className="editorial-kicker text-[#8A6A45]">
-            COLLECTION DIRECTORY
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#171717] uppercase">
+        {/* Top Title & Subtitle */}
+        <div className="space-y-2 pb-6 border-b border-neutral-200">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 uppercase">
             {title}
           </h1>
-          <p className="text-xs sm:text-sm text-[#686868] max-w-xl">
+          <p className="text-xs sm:text-sm text-neutral-500 max-w-xl">
             {subtitle}
           </p>
         </div>
 
         {/* Toolbar: Filter Trigger, Sort Dropdown & Grid View Toggle */}
-        <div className="py-5 flex flex-wrap items-center justify-between gap-4 border-b border-[#E6E3DD]">
+        <div className="py-4 flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200">
           {/* Mobile Filter Toggle Button */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="lg:hidden inline-flex items-center gap-2 px-3 py-2 bg-white border border-[#E6E3DD] text-xs font-semibold uppercase tracking-wider text-[#171717]"
+              className="lg:hidden inline-flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 text-xs font-semibold uppercase tracking-wider text-[#171717]"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}</span>
@@ -256,7 +252,7 @@ export function ProductListingView({
                   setSortBy(field);
                   setSortOrder(order);
                 }}
-                className="bg-white border border-[#E6E3DD] px-3 py-1.5 text-xs font-medium text-[#171717] focus:outline-none uppercase tracking-wider"
+                className="bg-white border border-neutral-200 px-3 py-1.5 text-xs font-medium text-[#171717] focus:outline-none uppercase tracking-wider"
               >
                 <option value="createdAt-DESC">Newest Arrivals</option>
                 <option value="price-ASC">Price: Low to High</option>
@@ -266,7 +262,7 @@ export function ProductListingView({
             </div>
 
             {/* Grid Toggle (Desktop) */}
-            <div className="hidden sm:flex items-center gap-1 border border-[#E6E3DD] bg-white p-0.5">
+            <div className="hidden sm:flex items-center gap-1 border border-neutral-200 bg-white p-0.5">
               <button
                 onClick={() => setGridColumns(3)}
                 className={`p-1 transition-colors ${
@@ -293,7 +289,7 @@ export function ProductListingView({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pt-10">
           {/* Desktop Filter Sidebar (3 cols) */}
           <aside className="hidden lg:block lg:col-span-3 pr-4">
-            <FilterControls />
+            {renderFilterControls()}
           </aside>
 
           {/* Product Grid Area (9 cols on desktop, 12 on mobile) */}
@@ -318,8 +314,8 @@ export function ProductListingView({
         title={`Filter & Refine (${activeFilterCount})`}
       >
         <div className="space-y-6">
-          <FilterControls />
-          <div className="pt-4 border-t border-[#E6E3DD]">
+          {renderFilterControls()}
+          <div className="pt-4 border-t border-neutral-200">
             <Button
               variant="primary"
               size="lg"

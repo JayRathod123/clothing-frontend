@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { ProductImage } from '@/types/product.types';
+import { Maximize2 } from 'lucide-react';
 
 interface ProductGalleryProps {
   images: ProductImage[];
@@ -11,6 +12,7 @@ interface ProductGalleryProps {
 
 export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   const displayImages =
     images && images.length > 0
@@ -28,45 +30,82 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const currentImage = displayImages[selectedIndex] || displayImages[0];
 
   return (
-    <div className="flex flex-col-reverse md:flex-row gap-4">
-      {/* Thumbnail column (Desktop) */}
-      <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto shrink-0 pb-2 md:pb-0 scrollbar-none">
-        {displayImages.map((img, idx) => {
-          const isSelected = selectedIndex === idx;
-          return (
-            <button
-              key={img.id || idx}
-              type="button"
-              onClick={() => setSelectedIndex(idx)}
-              className={`relative w-18 h-24 md:w-20 md:h-26 overflow-hidden bg-[#EFEEE9] shrink-0 border transition-all duration-150 focus:outline-none ${
-                isSelected
-                  ? 'border-[#171717] ring-1 ring-[#171717]'
-                  : 'border-[#E6E3DD] opacity-75 hover:opacity-100 hover:border-[#929292]'
-              }`}
-            >
-              <Image
-                src={img.url}
-                alt={`${productName} thumbnail ${idx + 1}`}
-                fill
-                sizes="80px"
-                className="object-cover object-center"
-              />
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Main Large Image */}
-      <div className="relative aspect-3/4 w-full flex-1 overflow-hidden bg-[#EFEEE9] border border-[#E6E3DD]">
+    <div className="space-y-4">
+      {/* Main Large Image with rounded corners & zoom button */}
+      <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-[#F4F5F7] border border-neutral-200">
         <Image
           src={currentImage.url}
           alt={`${productName} main view`}
           fill
           priority
-          sizes="(max-width: 768px) 100vw, 55vw"
+          sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover object-center transition-all duration-300"
         />
+
+        {/* Zoom Expand Button top-left */}
+        <button
+          type="button"
+          onClick={() => setIsZoomOpen(true)}
+          className="absolute top-4 left-4 z-10 w-9 h-9 rounded-lg bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-xs transition-colors"
+          aria-label="Zoom image"
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
       </div>
+
+      {/* Horizontal Thumbnails Directly Under Main Image */}
+      {displayImages.length > 1 && (
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+          {displayImages.map((img, idx) => {
+            const isSelected = selectedIndex === idx;
+            return (
+              <button
+                key={img.id || idx}
+                type="button"
+                onClick={() => setSelectedIndex(idx)}
+                className={`relative w-20 h-24 overflow-hidden rounded-xl bg-[#F4F5F7] shrink-0 border-2 transition-all duration-150 focus:outline-none ${
+                  isSelected
+                    ? 'border-black ring-1 ring-black'
+                    : 'border-neutral-200 hover:border-neutral-400 opacity-80 hover:opacity-100'
+                }`}
+              >
+                <Image
+                  src={img.url}
+                  alt={`${productName} thumbnail ${idx + 1}`}
+                  fill
+                  sizes="80px"
+                  className="object-cover object-center"
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Zoom Modal */}
+      {isZoomOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setIsZoomOpen(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <Image
+              src={currentImage.url}
+              alt={productName}
+              fill
+              className="object-contain"
+            />
+            <button
+              onClick={() => setIsZoomOpen(false)}
+              className="absolute top-4 right-4 text-white text-xl bg-black/60 w-10 h-10 rounded-full flex items-center justify-center hover:bg-black"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default ProductGallery;
