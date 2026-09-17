@@ -1,3 +1,5 @@
+'use client';
+
 import React, { forwardRef } from 'react';
 
 export interface RadioOption {
@@ -23,7 +25,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
     return (
       <div ref={ref} className={`flex flex-col gap-2 ${className}`}>
         {label && (
-          <span className="text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-800 mb-1">
             {label}
           </span>
         )}
@@ -33,12 +35,12 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
             return (
               <label
                 key={opt.value}
-                className={`relative flex items-start gap-3.5 p-3.5 border transition-all cursor-pointer select-none ${
+                className={`relative flex items-start gap-3.5 p-3.5 border transition-all cursor-pointer select-none group ${
                   opt.disabled ? 'opacity-50 cursor-not-allowed bg-neutral-50' : ''
                 } ${
                   isSelected
-                    ? 'border-black bg-neutral-50 shadow-xs'
-                    : 'border-neutral-200 bg-white hover:border-neutral-400'
+                    ? 'border-black bg-neutral-50/70 shadow-2xs'
+                    : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50/30'
                 }`}
               >
                 <div className="flex items-center justify-center mt-0.5">
@@ -51,24 +53,34 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
                     onChange={() => onChange(opt.value)}
                     className="sr-only"
                   />
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
-                    isSelected ? 'border-black' : 'border-neutral-400'
-                  }`}>
-                    {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                      isSelected
+                        ? 'border-black ring-2 ring-black/10'
+                        : 'border-neutral-400 group-hover:border-black'
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full bg-black transition-transform duration-150 ease-out ${
+                        isSelected ? 'scale-100' : 'scale-0'
+                      }`}
+                    />
                   </div>
                 </div>
 
                 <div className="flex-1 flex items-start justify-between gap-2">
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-neutral-900 leading-snug">
+                    <span className="text-xs font-semibold text-neutral-900 leading-snug">
                       {opt.label}
                     </span>
                     {opt.description && (
-                      <span className="text-xs text-neutral-500 mt-0.5">{opt.description}</span>
+                      <span className="text-[11px] text-neutral-500 mt-0.5 leading-relaxed">
+                        {opt.description}
+                      </span>
                     )}
                   </div>
                   {opt.badge && (
-                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-neutral-900 text-white">
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-black text-white">
                       {opt.badge}
                     </span>
                   )}
@@ -77,7 +89,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
             );
           })}
         </div>
-        {error && <span className="text-xs text-red-600 font-medium">{error}</span>}
+        {error && <span className="text-[11px] text-red-600 font-medium">{error}</span>}
       </div>
     );
   }
