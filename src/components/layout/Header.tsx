@@ -28,6 +28,8 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const dropdownTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const navRef = React.useRef<HTMLElement>(null);
 
   const { openCart, openSearch } = useUI();
   const { data: cart } = useCart();
@@ -35,6 +37,48 @@ export function Header() {
 
   const totalCartCount = cart?.totalQuantity ?? 0;
   const cartSubtotal = cart?.subtotal ?? 0;
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setActiveDropdown(null);
+  }, [pathname]);
+
+  const handleDropdownEnter = (name: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setActiveDropdown(name);
+  };
+
+  const handleDropdownLeave = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 250); // 250ms grace period so moving mouse to dropdown never closes prematurely
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -192,7 +236,7 @@ export function Header() {
         </div>
 
         {/* BOTTOM SOLID BLACK NAVIGATION TIER (Desktop) */}
-        <nav className="hidden lg:block bg-black text-white">
+        <nav ref={navRef} className="hidden lg:block bg-black text-white">
           <Container>
             <ul className="flex items-center justify-center gap-8 py-3 text-xs font-semibold uppercase tracking-wider">
               <li>
@@ -217,31 +261,47 @@ export function Header() {
                 </Link>
               </li>
 
-              {/* Category Dropdown */}
+              {/* Category Dropdown with Hover Bridge & Grace Period */}
               <li
                 className="relative"
-                onMouseEnter={() => setActiveDropdown('category')}
-                onMouseLeave={() => setActiveDropdown(null)}
+                onMouseEnter={() => handleDropdownEnter('category')}
+                onMouseLeave={handleDropdownLeave}
               >
                 <button
                   type="button"
-                  className="flex items-center gap-1 text-white hover:text-sky-400 transition-colors uppercase"
+                  onClick={() =>
+                    setActiveDropdown((prev) => (prev === 'category' ? null : 'category'))
+                  }
+                  className={`flex items-center gap-1 uppercase transition-colors select-none cursor-pointer ${
+                    activeDropdown === 'category' ? 'text-sky-400' : 'text-white hover:text-sky-400'
+                  }`}
                 >
-                  Category
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>Category</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      activeDropdown === 'category' ? 'rotate-180 text-sky-400' : ''
+                    }`}
+                  />
                 </button>
 
                 {activeDropdown === 'category' && (
-                  <div className="absolute top-full left-0 w-56 bg-white text-neutral-900 shadow-xl border border-neutral-100 py-2 mt-1 rounded-sm animate-in fade-in slide-in-from-top-1 duration-150 z-50">
-                    {categories.map((cat) => (
-                      <Link
-                        key={cat.label}
-                        href={cat.href}
-                        className="block px-4 py-2 text-xs font-medium hover:bg-neutral-50 hover:text-sky-600 transition-colors normal-case"
-                      >
-                        {cat.label}
-                      </Link>
-                    ))}
+                  <div
+                    className="absolute top-full left-0 pt-2 z-50 min-w-[240px]"
+                    onMouseEnter={() => handleDropdownEnter('category')}
+                    onMouseLeave={handleDropdownLeave}
+                  >
+                    <div className="bg-white text-neutral-900 shadow-2xl border border-neutral-200/90 py-1.5 rounded-xs animate-in fade-in-0 zoom-in-95 duration-150">
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat.label}
+                          href={cat.href}
+                          onClick={() => setActiveDropdown(null)}
+                          className="block px-4 py-2.5 text-xs font-semibold text-neutral-800 hover:bg-neutral-100/80 hover:text-black transition-colors normal-case"
+                        >
+                          {cat.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </li>
@@ -257,31 +317,47 @@ export function Header() {
                 </Link>
               </li>
 
-              {/* Policy Dropdown */}
+              {/* Policy Dropdown with Hover Bridge & Grace Period */}
               <li
                 className="relative"
-                onMouseEnter={() => setActiveDropdown('policy')}
-                onMouseLeave={() => setActiveDropdown(null)}
+                onMouseEnter={() => handleDropdownEnter('policy')}
+                onMouseLeave={handleDropdownLeave}
               >
                 <button
                   type="button"
-                  className="flex items-center gap-1 text-white hover:text-sky-400 transition-colors uppercase"
+                  onClick={() =>
+                    setActiveDropdown((prev) => (prev === 'policy' ? null : 'policy'))
+                  }
+                  className={`flex items-center gap-1 uppercase transition-colors select-none cursor-pointer ${
+                    activeDropdown === 'policy' ? 'text-sky-400' : 'text-white hover:text-sky-400'
+                  }`}
                 >
-                  Our Policy
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>Our Policy</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      activeDropdown === 'policy' ? 'rotate-180 text-sky-400' : ''
+                    }`}
+                  />
                 </button>
 
                 {activeDropdown === 'policy' && (
-                  <div className="absolute top-full left-0 w-52 bg-white text-neutral-900 shadow-xl border border-neutral-100 py-2 mt-1 rounded-sm animate-in fade-in slide-in-from-top-1 duration-150 z-50">
-                    {policies.map((pol) => (
-                      <Link
-                        key={pol.label}
-                        href={pol.href}
-                        className="block px-4 py-2 text-xs font-medium hover:bg-neutral-50 hover:text-sky-600 transition-colors normal-case"
-                      >
-                        {pol.label}
-                      </Link>
-                    ))}
+                  <div
+                    className="absolute top-full left-0 pt-2 z-50 min-w-[220px]"
+                    onMouseEnter={() => handleDropdownEnter('policy')}
+                    onMouseLeave={handleDropdownLeave}
+                  >
+                    <div className="bg-white text-neutral-900 shadow-2xl border border-neutral-200/90 py-1.5 rounded-xs animate-in fade-in-0 zoom-in-95 duration-150">
+                      {policies.map((pol) => (
+                        <Link
+                          key={pol.label}
+                          href={pol.href}
+                          onClick={() => setActiveDropdown(null)}
+                          className="block px-4 py-2.5 text-xs font-semibold text-neutral-800 hover:bg-neutral-100/80 hover:text-black transition-colors normal-case"
+                        >
+                          {pol.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </li>
