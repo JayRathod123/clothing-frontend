@@ -33,7 +33,7 @@ export function TrustBadgesStrip() {
                 Free Shipping
               </h4>
               <p className="text-xs sm:text-sm text-neutral-500 font-medium">
-                On Prepaid Orders
+                All Over India
               </p>
             </div>
           </div>
@@ -45,10 +45,10 @@ export function TrustBadgesStrip() {
             </div>
             <div>
               <h4 className="text-sm sm:text-base font-extrabold text-neutral-900">
-                Easy Returns
+                Damage Returns
               </h4>
               <p className="text-xs sm:text-sm text-neutral-500 font-medium">
-                7-days Returns
+                Returns on Damaged Products Only
               </p>
             </div>
           </div>
@@ -86,9 +86,9 @@ export function TrustBadgesStrip() {
       </div>
 
       {/* GIVE YOUR FEEDBACK BANNER */}
-      <div className="bg-black text-white py-5 px-4 sm:px-6 lg:px-8">
+      {/* <div className="bg-black text-white py-5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h3 className="text-lg sm:text-2xl font-black tracking-tight text-white font-heading">
+          <h3 className="text-lg sm:text-2xl font-semibold tracking-tight text-white font-heading">
             Give your Feedback
           </h3>
 
@@ -101,7 +101,7 @@ export function TrustBadgesStrip() {
             <span>Feedback</span>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Feedback Modal */}
       {showFeedbackModal && (

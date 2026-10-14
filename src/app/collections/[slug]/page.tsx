@@ -23,7 +23,9 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   return (
     <ProductListingView
       title={collection?.name || slug.replace('-', ' ').toUpperCase()}
-      subtitle={collection?.description || 'Limited seasonal release crafted with considered textiles.'}
+      subtitle={collection?.description || `Explore pieces from the ${collection?.name || slug} collection.`}
+      collectionSlug={slug}
+      initialProducts={collection?.products}
     />
   );
 }

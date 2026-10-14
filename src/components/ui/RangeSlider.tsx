@@ -64,7 +64,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
       {/* Header Info */}
       <div className="flex items-center justify-between text-xs sm:text-sm uppercase font-extrabold tracking-wider text-neutral-900">
         <span>{label || 'Max Price'}</span>
-        <span className="bg-neutral-100 text-black px-2.5 py-0.5 font-bold text-xs sm:text-sm border border-neutral-200">
+        <span className="bg-neutral-100 text-neutral-900 px-2.5 py-0.5 font-bold text-xs rounded-lg border border-neutral-200/80 shadow-2xs">
           {formatValue(value)}
         </span>
       </div>
@@ -76,17 +76,17 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
         className="relative h-6 flex items-center cursor-pointer select-none group touch-none"
       >
         {/* Track Background */}
-        <div className="w-full h-1 bg-neutral-200 group-hover:h-1.5 transition-all" />
+        <div className="w-full h-1.5 rounded-full bg-neutral-200/80 group-hover:h-2 transition-all" />
 
         {/* Active Fill Track */}
         <div
-          className="absolute left-0 h-1 bg-black group-hover:h-1.5 transition-all"
+          className="absolute left-0 h-1.5 rounded-full bg-neutral-950 group-hover:h-2 transition-all"
           style={{ width: `${percentage}%` }}
         />
 
         {/* Drag Handle Thumb */}
         <div
-          className="absolute w-4 h-4 bg-white border-2 border-black shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 transition-transform duration-75 group-hover:scale-125 focus:scale-125"
+          className="absolute w-5 h-5 bg-white border-2 border-neutral-950 rounded-full shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 transition-transform duration-75 group-hover:scale-115 focus:scale-115 focus:ring-2 focus:ring-neutral-400 outline-none cursor-grab active:cursor-grabbing"
           style={{ left: `${percentage}%` }}
           tabIndex={0}
           role="slider"

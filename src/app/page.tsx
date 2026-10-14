@@ -29,7 +29,7 @@ export default function HomePage() {
       <WatchAndBuyBlock />
 
       {/* 5. Customer Words (Testimonials with 5-Star Reviews) */}
-      <SocialProofBlock />
+      {/* <SocialProofBlock /> */}
 
       {/* 6. Trust Badges Strip & Give your Feedback Banner */}
       <TrustBadgesStrip />

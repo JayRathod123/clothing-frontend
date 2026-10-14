@@ -18,6 +18,22 @@ export function getStoredAccessToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
+export function getStoredRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function setStoredRefreshToken(refreshToken: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+}
+
+export function isUserLoggedIn(): boolean {
+  if (typeof window === 'undefined') return false;
+  const token = getStoredAccessToken();
+  return Boolean(token && token.trim() !== '' && token !== 'mock_jwt_token_aura');
+}
+
 export function setStoredAuthTokens(accessToken: string, refreshToken?: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);

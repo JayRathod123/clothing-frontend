@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useUI } from '@/context/UIContext';
 import { useSearch } from '@/hooks/useSearch';
@@ -11,6 +12,7 @@ import { formatPrice } from '@/utils/formatters';
 import { Search, X, ArrowRight } from 'lucide-react';
 
 export function SearchOverlay() {
+  const router = useRouter();
   const { isSearchOpen, closeSearch } = useUI();
   const { searchTerm, setSearchTerm, results, isLoading, total } = useSearch('');
   const { data: categories = [] } = useCategories();
@@ -97,6 +99,12 @@ export function SearchOverlay() {
               placeholder="SEARCH PRODUCTS, FABRICS, SILHOUETTES..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchTerm.trim()) {
+                  closeSearch();
+                  router.push(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+                }
+              }}
               className="flex-1 text-base sm:text-lg font-medium tracking-tight bg-transparent text-[#171717] placeholder:text-[#929292] focus:outline-none uppercase"
             />
             {searchTerm && (
@@ -209,7 +217,7 @@ export function SearchOverlay() {
                     {categories.map((cat) => (
                       <Link
                         key={cat.id}
-                        href={`/category/${cat.slug}`}
+                        href={`/shop?category=${cat.id}`}
                         onClick={closeSearch}
                         className="flex items-center justify-between py-1.5 text-neutral-800 hover:text-black font-medium transition-colors border-b border-neutral-200/50"
                       >

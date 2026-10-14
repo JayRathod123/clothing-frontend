@@ -6,11 +6,13 @@ export const categoryService = {
   // Get all categories directly from live API
   async getCategories(params?: CategoryFilterParams): Promise<Category[]> {
     try {
-      const response = await axiosInstance.get<ApiResponse<PaginatedData<Category>>>('/api/categories', {
+      const response = await axiosInstance.get<ApiResponse<any>>('/api/categories', {
         params,
       });
-      if (response.data.success && response.data.data?.items) {
-        return response.data.data.items;
+      const resData = response.data?.data;
+      const items = resData?.data || resData?.items || (Array.isArray(resData) ? resData : []);
+      if (response.data?.success && Array.isArray(items)) {
+        return items;
       }
     } catch (err) {
       console.error('API /api/categories error:', err);
@@ -22,9 +24,11 @@ export const categoryService = {
   // Get category tree directly from live API
   async getCategoryTree(): Promise<CategoryTree[]> {
     try {
-      const response = await axiosInstance.get<ApiResponse<CategoryTree[]>>('/api/categories/tree');
-      if (response.data.success && response.data.data) {
-        return response.data.data;
+      const response = await axiosInstance.get<ApiResponse<any>>('/api/categories/tree');
+      const resData = response.data?.data;
+      const tree = resData?.data || resData?.items || (Array.isArray(resData) ? resData : []);
+      if (response.data?.success && Array.isArray(tree)) {
+        return tree;
       }
     } catch (err) {
       console.error('API /api/categories/tree error:', err);
@@ -36,9 +40,11 @@ export const categoryService = {
   // Get category by slug directly from live API
   async getCategoryBySlug(slug: string): Promise<Category | null> {
     try {
-      const response = await axiosInstance.get<ApiResponse<Category>>(`/api/categories/slug/${slug}`);
-      if (response.data.success && response.data.data) {
-        return response.data.data;
+      const response = await axiosInstance.get<any>(`/api/categories/slug/${slug}`);
+      const resData = response.data;
+      const category = resData?.data?.data || resData?.data || resData;
+      if (category && (category.id || category.name)) {
+        return category;
       }
     } catch (err) {
       console.warn(`API /api/categories/slug/${slug} error:`, err);
@@ -46,7 +52,7 @@ export const categoryService = {
 
     try {
       const categories = await this.getCategories();
-      return categories.find(c => c.slug === slug) || null;
+      return categories.find(c => c.slug === slug || c.id === slug) || null;
     } catch {
       return null;
     }

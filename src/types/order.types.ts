@@ -22,13 +22,17 @@ export interface OrderItem {
   orderId: string;
   variantId: string;
   productName: string;
+  productNameSnapshot?: string;
   sku: string;
+  skuSnapshot?: string;
   size?: string;
   color?: string;
   price: number;
+  priceAtPurchase?: string | number;
   quantity: number;
   totalPrice: number;
   productImage?: string;
+  imageUrlSnapshot?: string | null;
 }
 
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
@@ -38,7 +42,7 @@ export interface Order {
   orderNumber: string;
   userId?: string;
   status: OrderStatus;
-  shippingAddress: CheckoutAddressDto;
+  shippingAddress?: CheckoutAddressDto;
   billingAddress?: CheckoutAddressDto;
   subtotal: number;
   shippingCharge: number;
@@ -46,7 +50,7 @@ export interface Order {
   totalAmount: number;
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod: string;
-  items: OrderItem[];
+  items?: OrderItem[];
   placedAt?: string;
   createdAt: string;
   updatedAt: string;

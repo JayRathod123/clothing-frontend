@@ -1,130 +1,81 @@
 import axiosInstance from '@/lib/axiosInstance';
 import { Wishlist, WishlistItem } from '@/types/wishlist.types';
 import { ApiResponse } from '@/types/api.types';
-import { productService } from './product.service';
-import { cartService } from './cart.service';
+import { isUserLoggedIn } from '@/utils/storage';
 
-const LOCAL_WISHLIST_KEY = 'aura_local_wishlist';
-
-function getLocalWishlist(): Wishlist {
-  if (typeof window === 'undefined') {
-    return { id: 'wl-server', items: [], totalItems: 0 };
-  }
-  try {
-    const raw = localStorage.getItem(LOCAL_WISHLIST_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { id: 'wl-local', items: [], totalItems: 0 };
-}
-
-function saveLocalWishlist(wl: Wishlist): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(LOCAL_WISHLIST_KEY, JSON.stringify(wl));
-  } catch {}
-}
+export { isUserLoggedIn };
 
 export const wishlistService = {
-  // Get customer wishlist
+  // Check if current user is logged in
+  isLoggedIn(): boolean {
+    return isUserLoggedIn();
+  },
+
+  // Get customer wishlist - Only call backend API if user is logged in
   async getWishlist(): Promise<Wishlist> {
+    if (!isUserLoggedIn()) {
+      return { id: 'wl-guest', items: [], totalItems: 0 };
+    }
+
     try {
       const response = await axiosInstance.get<ApiResponse<Wishlist>>('/api/wishlist');
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-    } catch (err) {
-      // 401 unauthenticated users use local storage wishlist
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        return { id: 'wl-guest', items: [], totalItems: 0 };
+      }
+      console.warn('API /api/wishlist error', err);
     }
-    return getLocalWishlist();
+    return { id: 'wl-empty', items: [], totalItems: 0 };
   },
 
-  // Add item to wishlist
+  // Add item to wishlist - Only call backend API if user is logged in
   async addItem(productId: string, variantId?: string): Promise<Wishlist> {
-    try {
-      const response = await axiosInstance.post<ApiResponse<Wishlist>>('/api/wishlist/items', {
-        productId,
-        variantId,
-      });
-      if (response.data.success && response.data.data) {
-        return response.data.data;
-      }
-    } catch (err) {
-      // Guest fallback to local storage
+    if (!isUserLoggedIn()) {
+      throw new Error('Authentication required: Please sign in to add items to your wishlist');
     }
 
-    const wl = getLocalWishlist();
-    const product = await productService.getProductById(productId);
-    if (!product) return wl;
-
-    const variant = variantId ? product.variants.find(v => v.id === variantId) : product.variants[0];
-
-    if (!wl.items.some(i => i.productId === productId)) {
-      const item: WishlistItem = {
-        id: `wli_${Date.now()}`,
-        wishlistId: wl.id,
-        productId,
-        variantId: variant?.id,
-        product,
-        variant,
-        addedAt: new Date().toISOString(),
-      };
-      const updated = {
-        ...wl,
-        items: [...wl.items, item],
-        totalItems: wl.items.length + 1,
-      };
-      saveLocalWishlist(updated);
-      return updated;
+    const response = await axiosInstance.post<ApiResponse<Wishlist>>('/api/wishlist/items', {
+      productId,
+      variantId,
+    });
+    if (response.data.success && response.data.data) {
+      return response.data.data;
     }
-
-    return wl;
+    throw new Error(response.data.message || 'Failed to add item to wishlist');
   },
 
-  // Remove item from wishlist
+  // Remove item from wishlist - Only call backend API if user is logged in
   async removeItem(productId: string): Promise<Wishlist> {
-    try {
-      const response = await axiosInstance.delete<ApiResponse<Wishlist>>(`/api/wishlist/items/${productId}`);
-      if (response.data.success && response.data.data) {
-        return response.data.data;
-      }
-    } catch (err) {
-      // Fallback to local
+    if (!isUserLoggedIn()) {
+      throw new Error('Authentication required');
     }
 
-    const wl = getLocalWishlist();
-    const updated = {
-      ...wl,
-      items: wl.items.filter(i => i.productId !== productId),
-      totalItems: Math.max(0, wl.items.length - 1),
-    };
-    saveLocalWishlist(updated);
-    return updated;
+    const response = await axiosInstance.delete<ApiResponse<Wishlist>>(`/api/wishlist/items/${productId}`);
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    throw new Error(response.data.message || 'Failed to remove item from wishlist');
   },
 
-  // Clear wishlist
+  // Clear wishlist - Only call backend API if user is logged in
   async clearWishlist(): Promise<void> {
+    if (!isUserLoggedIn()) return;
     try {
       await axiosInstance.delete('/api/wishlist');
-    } catch {}
-    saveLocalWishlist({ id: 'wl-local', items: [], totalItems: 0 });
+    } catch (err) {
+      console.warn('API /api/wishlist clear failed', err);
+    }
   },
 
-  // Move item to cart
+  // Move item to cart - Only call backend API if user is logged in
   async moveToCart(itemId: string, variantId?: string): Promise<void> {
-    try {
-      await axiosInstance.post(`/api/wishlist/items/${itemId}/move-to-cart`, { variantId });
-      return;
-    } catch {}
-
-    const targetVariantId = variantId || 'var-1';
-    await cartService.addItem({ variantId: targetVariantId, quantity: 1 });
-    const wl = getLocalWishlist();
-    const updated = {
-      ...wl,
-      items: wl.items.filter(i => i.id !== itemId),
-      totalItems: Math.max(0, wl.items.length - 1),
-    };
-    saveLocalWishlist(updated);
+    if (!isUserLoggedIn()) {
+      throw new Error('Authentication required');
+    }
+    await axiosInstance.post(`/api/wishlist/items/${itemId}/move-to-cart`, { variantId });
   },
 };
 

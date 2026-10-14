@@ -17,8 +17,71 @@ export default function ContactPage() {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const validateField = (fieldName: string, value: string): string => {
+    const val = (value || '').trim();
+    switch (fieldName) {
+      case 'name':
+        if (!val) return 'Full name is required';
+        if (val.length < 2) return 'Full name must be at least 2 characters';
+        return '';
+      case 'email':
+        if (!val) return 'Email address is required';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Please enter a valid email address';
+        return '';
+      case 'message':
+        if (!val) return 'Message is required';
+        if (val.length < 10) return 'Please provide a message with at least 10 characters';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const handleBlur = (fieldName: string, value: string) => {
+    setTouched((prev) => ({ ...prev, [fieldName]: true }));
+    const err = validateField(fieldName, value);
+    setErrors((prev) => ({ ...prev, [fieldName]: err }));
+  };
+
+  const handleNameChange = (val: string) => {
+    setName(val);
+    if (touched.name) {
+      setErrors((prev) => ({ ...prev, name: validateField('name', val) }));
+    }
+  };
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    if (touched.email) {
+      setErrors((prev) => ({ ...prev, email: validateField('email', val) }));
+    }
+  };
+
+  const handleMessageChange = (val: string) => {
+    setMessage(val);
+    if (touched.message) {
+      setErrors((prev) => ({ ...prev, message: validateField('message', val) }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const nameErr = validateField('name', name);
+    const emailErr = validateField('email', email);
+    const messageErr = validateField('message', message);
+
+    const newErrors = { name: nameErr, email: emailErr, message: messageErr };
+    setTouched({ name: true, email: true, message: true });
+    setErrors(newErrors);
+
+    if (nameErr || emailErr || messageErr) {
+      return;
+    }
+
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
@@ -27,6 +90,8 @@ export default function ContactPage() {
       setEmail('');
       setOrderNumber('');
       setMessage('');
+      setTouched({});
+      setErrors({});
     }, 600);
   };
 
@@ -39,7 +104,7 @@ export default function ContactPage() {
           <span className="text-[11px] font-black uppercase tracking-[0.25em] text-red-600 block mb-1">
             CLIENT CONCIERGE
           </span>
-          <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-neutral-900">
+          <h1 className="text-2xl sm:text-4xl font-bold uppercase tracking-tight text-neutral-900">
             Get in Touch
           </h1>
           <p className="text-xs text-neutral-500 font-medium uppercase tracking-wider mt-1">
@@ -115,24 +180,26 @@ export default function ContactPage() {
                   Send a Message
                 </h3>
                 <p className="text-xs text-neutral-500">
-                  For exchanges or return requests, please include your order number.
+                  For damage return requests, please include your order number and photos/video of the defect.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Full Name"
+                    label="Full Name *"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    onBlur={() => handleBlur('name', name)}
+                    error={touched.name ? errors.name : undefined}
                   />
                   <Input
-                    label="Email Address"
+                    label="Email Address *"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    onBlur={() => handleBlur('email', email)}
+                    error={touched.email ? errors.email : undefined}
                   />
                 </div>
 
@@ -145,23 +212,30 @@ export default function ContactPage() {
 
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                    Message
+                    Message *
                   </label>
                   <textarea
-                    required
                     rows={5}
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(e) => handleMessageChange(e.target.value)}
+                    onBlur={() => handleBlur('message', message)}
                     placeholder="How can we assist you with fits, fabric care, or order dispatches?"
-                    className="w-full bg-neutral-50 border border-neutral-200 p-3 text-xs text-neutral-900 focus:bg-white focus:border-black focus:outline-none transition-colors"
+                    className={`w-full bg-neutral-50 border p-3 text-xs text-neutral-900 focus:bg-white focus:outline-none transition-colors ${
+                      touched.message && errors.message
+                        ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/20'
+                        : 'border-neutral-200 focus:border-black'
+                    }`}
                   />
+                  {touched.message && errors.message && (
+                    <p className="text-xs text-red-600 font-semibold">{errors.message}</p>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
                   variant="primary"
                   size="md"
-                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
                   className="w-full sm:w-auto text-xs font-bold uppercase tracking-widest"
                 >
                   {isSubmitting ? 'Sending...' : 'Send Message'}

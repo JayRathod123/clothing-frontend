@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Button } from '@/components/ui/Button';
-import { ShippingProgressBar } from '@/components/cart/ShippingProgressBar';
 import { QuantitySelector } from '@/components/common/QuantitySelector';
 import { ProductCard } from '@/components/product/ProductCard';
 import { formatPrice } from '@/utils/formatters';
@@ -15,7 +14,7 @@ import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
 import { useProducts } from '@/hooks/useProducts';
 import { cartService } from '@/services/cart.service';
 import { useUI } from '@/context/UIContext';
-import { Trash2, ArrowRight, Tag, ShieldCheck, Truck, RefreshCw, ShoppingBag } from 'lucide-react';
+import { Trash2, ArrowRight, Tag, ShieldCheck, Truck, RefreshCw, ShoppingBag, Loader2 } from 'lucide-react';
 
 export default function CartPage() {
   const router = useRouter();
@@ -115,9 +114,6 @@ export default function CartPage() {
           <div className="pt-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
             {/* Left Column: Cart Items (8 cols) */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-              {/* Shipping Progress */}
-              <ShippingProgressBar subtotal={subtotal} />
-
               {/* Items List */}
               <div className="bg-white border border-neutral-200 divide-y divide-neutral-200">
                 {items.map((item) => (
@@ -148,10 +144,15 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() => handleRemove(item.id, item.productName || 'item')}
-                            className="text-neutral-400 hover:text-red-600 transition-colors p-1"
+                            disabled={removeItem.isPending && removeItem.variables === item.id}
+                            className="text-neutral-400 hover:text-red-600 transition-colors p-1 disabled:cursor-not-allowed"
                             aria-label="Remove item"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            {removeItem.isPending && removeItem.variables === item.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
 
@@ -170,13 +171,19 @@ export default function CartPage() {
 
                       {/* Bottom row: Stepper & Subtotal */}
                       <div className="pt-4 flex items-center justify-between border-t border-neutral-100 mt-4">
-                        <QuantitySelector
-                          quantity={item.quantity}
-                          min={1}
-                          max={item.availableStock || 25}
-                          size="sm"
-                          onChange={(qty) => handleUpdateQty(item.id, qty)}
-                        />
+                        <div className="flex items-center gap-2">
+                          <QuantitySelector
+                            quantity={item.quantity}
+                            min={1}
+                            max={item.availableStock || 25}
+                            size="sm"
+                            disabled={updateItem.isPending && updateItem.variables?.itemId === item.id}
+                            onChange={(qty) => handleUpdateQty(item.id, qty)}
+                          />
+                          {updateItem.isPending && updateItem.variables?.itemId === item.id && (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-600" />
+                          )}
+                        </div>
 
                         <div className="text-right">
                           <span className="text-xs text-neutral-400 block font-normal">Subtotal</span>
@@ -198,7 +205,7 @@ export default function CartPage() {
                 </div>
                 <div className="p-3 bg-white border border-neutral-200 flex items-center gap-3">
                   <RefreshCw className="w-4 h-4 text-neutral-700 shrink-0" />
-                  <span className="text-xs text-neutral-700 font-semibold">7 Days Easy Exchange</span>
+                  <span className="text-xs text-neutral-700 font-semibold">Returns on Damaged Products</span>
                 </div>
                 <div className="p-3 bg-white border border-neutral-200 flex items-center gap-3">
                   <ShieldCheck className="w-4 h-4 text-neutral-700 shrink-0" />
@@ -230,9 +237,16 @@ export default function CartPage() {
                     <button
                       type="submit"
                       disabled={isApplyingCoupon || !couponCode.trim()}
-                      className="px-4 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 disabled:opacity-50 transition-colors"
+                      className="px-4 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 min-w-[75px] justify-center"
                     >
-                      Apply
+                      {isApplyingCoupon ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Applying...</span>
+                        </>
+                      ) : (
+                        'Apply'
+                      )}
                     </button>
                   </div>
 
@@ -274,6 +288,15 @@ export default function CartPage() {
                     <span className="text-neutral-500 font-medium">Included in MRP</span>
                   </div>
 
+                  <div className="bg-emerald-50/90 border border-emerald-200 rounded-lg p-2.5 text-xs text-emerald-800 flex items-center justify-between">
+                    <span className="font-semibold flex items-center gap-1">
+                      <span>⚡ Pay Online at Checkout</span>
+                    </span>
+                    <span className="font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider">
+                      Save 5% ({formatPrice(Math.round(Math.max(0, subtotal - discountAmount) * 0.05))})
+                    </span>
+                  </div>
+
                   <div className="flex items-center justify-between text-base font-black text-neutral-900 pt-3 border-t border-neutral-200">
                     <span>Total Amount</span>
                     <span>{formatPrice(finalTotal)}</span>
@@ -312,7 +335,7 @@ export default function CartPage() {
                 You May Also Like
               </h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 items-start">
               {recommendations.map((prod) => (
                 <ProductCard key={prod.id} product={prod} />
               ))}

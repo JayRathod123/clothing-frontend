@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Product, ProductVariant } from '@/types/product.types';
 import { formatPrice } from '@/utils/formatters';
 import { SizeGuideModal } from './SizeGuideModal';
 import { useAddToCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useAuth } from '@/hooks/useAuth';
 import { useUI } from '@/context/UIContext';
+import { isUserLoggedIn } from '@/utils/storage';
 import { shippingService } from '@/services/shipping.service';
 import { PincodeServiceability } from '@/types/shipping.types';
 import {
@@ -15,11 +18,14 @@ import {
   ShoppingCart,
   Eye,
   Truck,
-  ArrowLeftRight,
   Mail,
   Ruler,
   Check,
+  Star,
+  Loader2,
 } from 'lucide-react';
+import { PhonePeIcon, GooglePayIcon, PaytmIcon } from '@/components/common/PaymentIcons';
+import { useProductReviews } from '@/hooks/useReviews';
 
 interface ProductInfoProps {
   product: Product;
@@ -27,6 +33,28 @@ interface ProductInfoProps {
 
 export function ProductInfo({ product }: ProductInfoProps) {
   const router = useRouter();
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  const { data: reviewsData } = useProductReviews(product.id);
+  const totalReviews = reviewsData?.totalReviews !== undefined ? reviewsData.totalReviews : (product.reviewCount || 0);
+  const averageRating = reviewsData?.averageRating !== undefined && reviewsData.averageRating > 0
+    ? reviewsData.averageRating
+    : (product.rating || 0);
+
+  // Monitor scroll past main CTA for mobile sticky buy bar
+  useEffect(() => {
+    if (!ctaRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const isBelow = entry.boundingClientRect.top < 0;
+        setShowStickyBar(!entry.isIntersecting && isBelow);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(ctaRef.current);
+    return () => observer.disconnect();
+  }, []);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
     product.variants[0] || {}
   );
@@ -34,15 +62,39 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [questionSent, setQuestionSent] = useState(false);
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
+  const [isWishlisting, setIsWishlisting] = useState(false);
 
   // Pincode checker
   const [pincode, setPincode] = useState('');
   const [isCheckingPin, setIsCheckingPin] = useState(false);
   const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
 
+  // Dynamic live viewing counter (simulated real-time social proof)
+  const [viewingCount, setViewingCount] = useState<number>(() => {
+    const seed = product?.id
+      ? product.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+      : 18;
+    return 14 + (seed % 12); // Between 14 and 25
+  });
+
+  useEffect(() => {
+    // Fluctuates realistically every 4 to 6 seconds
+    const interval = setInterval(() => {
+      setViewingCount((prev) => {
+        const delta = Math.floor(Math.random() * 5) - 2; // -2, -1, 0, 1, 2
+        const next = prev + (delta === 0 ? 1 : delta);
+        return Math.min(32, Math.max(13, next)); // keep clamped realistically
+      });
+    }, 4800);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const addToCart = useAddToCart();
+  const { isAuthenticated } = useAuth();
   const { isItemInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
-  const { openCart, showToast } = useUI();
+  const { openCart, openAuthModal, showToast } = useUI();
 
   const isFavorited = isItemInWishlist(product.id);
 
@@ -88,6 +140,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   };
 
   const handleBuyNow = async () => {
+    setIsBuyingNow(true);
     try {
       await addToCart.mutateAsync({
         variantId: selectedVariant.id,
@@ -96,16 +149,35 @@ export function ProductInfo({ product }: ProductInfoProps) {
       router.push('/checkout');
     } catch {
       showToast('Could not proceed to checkout', 'error');
+      setIsBuyingNow(false);
     }
   };
 
   const handleWishlistToggle = async () => {
-    if (isFavorited) {
-      await removeFromWishlist(product.id);
-      showToast('Removed from wishlist', 'info');
-    } else {
-      await addToWishlist({ productId: product.id, variantId: selectedVariant.id });
-      showToast('Saved to wishlist');
+    if (!isAuthenticated || !isUserLoggedIn()) {
+      showToast('Please sign in to add items to your wishlist', 'info');
+      openAuthModal('login');
+      return;
+    }
+
+    setIsWishlisting(true);
+    try {
+      if (isFavorited) {
+        await removeFromWishlist(product.id);
+        showToast('Removed from wishlist', 'info');
+      } else {
+        await addToWishlist({ productId: product.id, variantId: selectedVariant.id });
+        showToast('Saved to wishlist', 'success');
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 401 || !isUserLoggedIn()) {
+        showToast('Please sign in to add items to your wishlist', 'info');
+        openAuthModal('login');
+      } else {
+        showToast(err?.message || 'Failed to update wishlist', 'error');
+      }
+    } finally {
+      setIsWishlisting(false);
     }
   };
 
@@ -132,9 +204,60 @@ export function ProductInfo({ product }: ProductInfoProps) {
   return (
     <div className="space-y-6 text-neutral-900">
       {/* 1. Title */}
-      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-neutral-900 leading-tight font-heading">
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-neutral-900">
         {product.name}
       </h1>
+
+      {/* Real Dynamic Rating & Review Count from API */}
+      <div className="flex items-center gap-2 -mt-3 mb-1">
+        {totalReviews > 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('reviews');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="group flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer text-left"
+          >
+            <div className="flex items-center gap-0.5 text-amber-400">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 ${
+                    i < Math.round(averageRating)
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'fill-neutral-100 text-neutral-200'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-neutral-900">
+              {Number(averageRating).toFixed(1)}
+            </span>
+            <span className="text-xs text-neutral-500 font-medium underline underline-offset-2 decoration-neutral-300 group-hover:decoration-neutral-900 transition-colors">
+              ({totalReviews} genuine customer {totalReviews === 1 ? 'review' : 'reviews'})
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('reviews');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="group flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-900 transition-colors cursor-pointer text-left"
+          >
+            <div className="flex items-center gap-0.5 text-neutral-200">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-3.5 h-3.5 fill-neutral-100 text-neutral-200" />
+              ))}
+            </div>
+            <span className="underline underline-offset-2 decoration-neutral-300 group-hover:decoration-neutral-900">
+              No reviews yet &bull; Be the first to review
+            </span>
+          </button>
+        )}
+      </div>
 
       {/* 2. Pricing Row */}
       <div className="flex items-center gap-3.5 flex-wrap">
@@ -146,7 +269,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <span className="text-3xl sm:text-4xl font-black text-neutral-900">
               {formatPrice(currentPrice)}
             </span>
-            <span className="bg-neutral-100 text-neutral-900 text-xs sm:text-sm font-extrabold px-3 py-1 rounded-sm border border-neutral-200">
+            <span className="inline-flex items-center bg-rose-600 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-full shadow-xs tracking-wide">
               Save -{discountPercent}%
             </span>
           </>
@@ -157,46 +280,68 @@ export function ProductInfo({ product }: ProductInfoProps) {
         )}
       </div>
 
+      {/* Product Description from API */}
+      {product.description && (
+        <div className="text-sm text-neutral-600 leading-relaxed font-normal">
+          <p>{product.description}</p>
+        </div>
+      )}
+
       <hr className="border-neutral-200" />
 
-      {/* 3. Real-time Urgency Widget */}
-      <div className="flex items-center gap-2.5 text-sm font-semibold text-neutral-800">
-        <Eye className="w-4 h-4 text-neutral-700" />
-        <span>
-          <strong className="font-black text-black">18</strong> people are viewing this right now.
+      {/* 3. Real-time Urgency Widget (Highlighted Amber Live Counter) */}
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200/70 text-xs sm:text-sm">
+        <span className="relative flex h-2 w-2 shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+        </span>
+        <Eye className="w-4 h-4 text-amber-600 shrink-0" />
+        <span className="text-neutral-800 font-medium">
+          <strong className="font-black text-amber-600 text-sm sm:text-base tabular-nums transition-all duration-300">
+            {viewingCount}
+          </strong>{' '}
+          people are viewing this right now
         </span>
       </div>
 
       <hr className="border-neutral-200" />
 
-      {/* 4. Metadata Details */}
+      {/* 4. Metadata Details (strictly from API) */}
       <div className="space-y-2.5 text-sm">
+        {product.categoryName && (
+          <div className="flex items-center gap-4">
+            <span className="text-neutral-500 font-medium w-28">Category:</span>
+            <span className="font-semibold text-neutral-900 capitalize">
+              {product.categoryName}
+            </span>
+          </div>
+        )}
+        {(selectedVariant.sku || product.sku) && (
+          <div className="flex items-center gap-4">
+            <span className="text-neutral-500 font-medium w-28">SKU:</span>
+            <span className="font-mono text-xs font-semibold text-neutral-800">
+              {selectedVariant.sku || product.sku}
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-4">
           <span className="text-neutral-500 font-medium w-28">Availability:</span>
-          <span className="font-bold text-neutral-900">
-            {selectedVariant.stockQuantity && selectedVariant.stockQuantity > 0
-              ? `${selectedVariant.stockQuantity} left in stock`
-              : 'In stock'}
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-neutral-500 font-medium w-28">Vendor:</span>
-          <span className="font-semibold text-neutral-900">Inkstyles</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-neutral-500 font-medium w-28">Type:</span>
-          <span className="font-semibold text-neutral-900">
-            {product.fit || 'Oversize'}
+          <span className={`font-bold ${selectedVariant.stockQuantity !== undefined && selectedVariant.stockQuantity <= 0 ? 'text-rose-600' : 'text-emerald-700'}`}>
+            {selectedVariant.stockQuantity !== undefined && selectedVariant.stockQuantity <= 0
+              ? 'Out of stock'
+              : selectedVariant.stockQuantity && selectedVariant.stockQuantity > 0
+                ? `${selectedVariant.stockQuantity} left in stock`
+                : 'In stock'}
           </span>
         </div>
       </div>
 
       <hr className="border-neutral-200" />
 
-      {/* 5. Size Selector (Square boxed outline pills) */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-4 text-sm font-bold">
-          <span className="text-neutral-900 w-16">Size :</span>
+      {/* 5. Size Selector (Medium rounded pills) */}
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-3 text-xs sm:text-sm font-bold">
+          <span className="text-neutral-900 w-14">Size :</span>
           <div className="flex items-center gap-2 flex-wrap">
             {sizes.map((size) => {
               const isSelected = selectedVariant.size === size;
@@ -205,10 +350,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
                   key={size}
                   type="button"
                   onClick={() => handleSizeSelect(size)}
-                  className={`w-11 h-11 flex items-center justify-center text-sm font-bold transition-all rounded-xs focus:outline-none cursor-pointer ${
+                  className={`min-w-[38px] h-9 px-2.5 flex items-center justify-center text-xs font-bold transition-all rounded-lg focus:outline-none cursor-pointer border ${
                     isSelected
-                      ? 'bg-black text-white shadow-xs'
-                      : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200'
+                      ? 'bg-black text-white border-black shadow-xs scale-[1.02]'
+                      : 'bg-white text-neutral-800 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-50 active:scale-95'
                   }`}
                 >
                   {size}
@@ -219,11 +364,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
       </div>
 
-      {/* 6. Color Selector (Square swatch) */}
+      {/* 6. Color Selector (Medium circular swatches) */}
       {colors.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-4 text-sm font-bold">
-            <span className="text-neutral-900 w-16">Color :</span>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-3 text-xs sm:text-sm font-bold">
+            <span className="text-neutral-900 w-14">Color :</span>
             <div className="flex items-center gap-2.5">
               {colors.map(([colorName, hex]) => {
                 const isSelected = selectedVariant.color === colorName;
@@ -233,14 +378,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     type="button"
                     title={colorName}
                     onClick={() => handleColorSelect(colorName)}
-                    className={`w-9 h-9 rounded-sm border-2 transition-all p-0.5 cursor-pointer ${
+                    className={`w-7.5 h-7.5 rounded-full transition-all p-0.5 cursor-pointer flex items-center justify-center ${
                       isSelected
-                        ? 'border-black ring-1 ring-black'
-                        : 'border-neutral-300 hover:border-neutral-500'
+                        ? 'ring-2 ring-black ring-offset-2 scale-105 shadow-2xs'
+                        : 'ring-1 ring-neutral-300 hover:ring-neutral-700 hover:scale-105'
                     }`}
                   >
                     <span
-                      className="w-full h-full block rounded-2xs"
+                      className="w-full h-full block rounded-full shadow-inner"
                       style={{ backgroundColor: hex }}
                     />
                   </button>
@@ -251,74 +396,97 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
       )}
 
-      {/* 7. Stepper + Add to Cart + Buy it Now */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center gap-3">
-          {/* Stepper [- 1 +] */}
-          <div className="inline-flex items-center border border-neutral-300 rounded-xs bg-white">
+      {/* 7. Stepper + Add to Cart + Buy it Now (Medium Proportions) */}
+      <div ref={ctaRef} className="space-y-2.5 pt-1.5">
+        <div className="flex items-center gap-2.5">
+          {/* Medium Rounded Stepper */}
+          <div className="inline-flex items-center bg-neutral-100 border border-neutral-200/80 rounded-lg p-1 h-11 shrink-0 shadow-2xs">
             <button
               type="button"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-12 h-14 flex items-center justify-center text-lg font-semibold hover:bg-neutral-100 transition-colors cursor-pointer"
+              className="w-7.5 h-7.5 rounded-md bg-white hover:bg-neutral-200 text-neutral-800 font-bold text-base flex items-center justify-center shadow-2xs transition-all active:scale-90 cursor-pointer disabled:opacity-40"
+              disabled={quantity <= 1}
+              aria-label="Decrease quantity"
             >
               -
             </button>
-            <span className="w-12 text-center text-base font-extrabold select-none">
+            <span className="w-8 text-center text-sm font-extrabold select-none text-neutral-900">
               {quantity}
             </span>
             <button
               type="button"
               onClick={() => setQuantity(quantity + 1)}
-              className="w-12 h-14 flex items-center justify-center text-lg font-semibold hover:bg-neutral-100 transition-colors cursor-pointer"
+              className="w-7.5 h-7.5 rounded-md bg-white hover:bg-neutral-200 text-neutral-800 font-bold text-base flex items-center justify-center shadow-2xs transition-all active:scale-90 cursor-pointer"
+              aria-label="Increase quantity"
             >
               +
             </button>
           </div>
 
-          {/* Add to Cart button (Charcoal with cart icon) */}
+          {/* Medium Add to Cart button */}
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={addToCart.isPending}
-            className="flex-1 h-14 bg-[#212121] hover:bg-neutral-950 text-white text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-xs flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
+            disabled={addToCart.isPending || isBuyingNow}
+            className="flex-1 h-11 bg-neutral-900 hover:bg-black text-white text-xs sm:text-sm font-extrabold uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-all shadow-xs hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] cursor-pointer group disabled:opacity-75 disabled:cursor-not-allowed"
           >
-            <ShoppingCart className="w-5 h-5" />
-            <span>Add to cart</span>
+            {addToCart.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Adding to cart...</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4 transition-transform group-hover:scale-110" />
+                <span>Add to cart</span>
+              </>
+            )}
           </button>
         </div>
 
-        {/* Buy It Now (Full solid black button) */}
+        {/* Medium Buy It Now button */}
         <button
           type="button"
           onClick={handleBuyNow}
-          className="w-full h-14 bg-black hover:bg-neutral-900 text-white text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-xs transition-colors shadow-xs cursor-pointer"
+          disabled={addToCart.isPending || isBuyingNow}
+          className="w-full h-11 px-4 bg-gradient-to-r from-neutral-950 via-black to-neutral-950 hover:from-black hover:to-neutral-900 text-white font-extrabold uppercase tracking-wider rounded-lg transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2.5 sm:gap-3 flex-wrap border border-white/10 group disabled:opacity-75 disabled:cursor-not-allowed"
         >
-          Buy it now
+          {isBuyingNow ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs sm:text-sm tracking-wider">Processing...</span>
+            </div>
+          ) : (
+            <>
+              <span className="text-xs sm:text-sm tracking-wider">Buy it now</span>
+              <span className="text-white/30 font-light text-sm">|</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 px-2 py-0.5 rounded-full backdrop-blur-xs border border-white/10 shadow-inner">
+                <PhonePeIcon className="w-6 h-6" />
+                <GooglePayIcon className="w-6 h-6" />
+                <PaytmIcon className="w-6 h-6" />
+              </div>
+            </>
+          )}
         </button>
       </div>
 
-      {/* 8. Secondary Actions (Wishlist, Compare, Ask Question, Size Chart) */}
+      {/* 8. Secondary Actions (Wishlist, Ask Question, Size Chart) */}
       <div className="pt-2 flex items-center justify-between text-sm text-neutral-800 border-b border-neutral-200 pb-4">
         <button
           type="button"
           onClick={handleWishlistToggle}
-          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer"
+          disabled={isWishlisting}
+          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Heart
-            className={`w-4 h-4 ${
-              isFavorited ? 'fill-red-600 text-red-600' : 'text-neutral-700'
-            }`}
-          />
-          <span>Add to wishlist</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => showToast('Product added to comparison list')}
-          className="inline-flex items-center gap-1.5 hover:text-black font-medium transition-colors cursor-pointer"
-        >
-          <ArrowLeftRight className="w-4 h-4" />
-          <span>Compare</span>
+          {isWishlisting ? (
+            <Loader2 className="w-4 h-4 animate-spin text-neutral-800" />
+          ) : (
+            <Heart
+              className={`w-4 h-4 ${isFavorited ? 'fill-red-600 text-red-600' : 'text-neutral-700'
+                }`}
+            />
+          )}
+          <span>{isWishlisting ? 'Saving...' : isFavorited ? 'In wishlist' : 'Add to wishlist'}</span>
         </button>
 
         <button
@@ -340,14 +508,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </button>
       </div>
 
-      {/* 9. Estimated Delivery Date & Pincode Checker */}
+      {/* 9. Pincode & Delivery Checker */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
           <Truck className="w-5 h-5 text-neutral-900 shrink-0" />
-          <span>
-            Estimated Delivery Date :{' '}
-            <strong className="font-extrabold text-black">22 - 24 September, 2026.</strong>
-          </span>
+          <span>Check Delivery & Pincode Serviceability:</span>
         </div>
 
         <form onSubmit={handleCheckPincode} className="flex gap-2 max-w-sm">
@@ -357,19 +522,26 @@ export function ProductInfo({ product }: ProductInfoProps) {
             value={pincode}
             onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
             placeholder="Enter Delivery Pincode"
-            className="flex-1 bg-white border border-neutral-300 rounded-sm px-4 py-2.5 text-sm text-neutral-900 focus:outline-none focus:border-black font-medium"
+            className="flex-1 bg-white border border-neutral-300 rounded-xl px-4 py-2.5 text-sm text-neutral-900 focus:outline-none focus:border-black font-medium transition-colors"
           />
           <button
             type="submit"
             disabled={isCheckingPin || pincode.length !== 6}
-            className="px-5 py-2.5 bg-neutral-900 text-white font-extrabold text-sm rounded-sm hover:bg-black disabled:opacity-50 transition-colors cursor-pointer"
+            className="px-5 py-2.5 bg-neutral-900 text-white font-extrabold text-sm rounded-xl hover:bg-black disabled:opacity-50 transition-all shadow-xs cursor-pointer active:scale-95 flex items-center gap-2"
           >
-            {isCheckingPin ? 'Checking...' : 'Check'}
+            {isCheckingPin ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Checking...</span>
+              </>
+            ) : (
+              'Check'
+            )}
           </button>
         </form>
 
         {pincodeResult && (
-          <div className="p-3 bg-neutral-50 border border-neutral-200 text-sm rounded-sm">
+          <div className="p-3.5 bg-neutral-50 border border-neutral-200 text-sm rounded-xl">
             <p className="font-semibold text-neutral-900">{pincodeResult.message}</p>
             {pincodeResult.codAvailable && (
               <span className="text-xs font-semibold text-emerald-700 block mt-1">
@@ -393,32 +565,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </ul>
       </div>
 
-      {/* 11. Guaranteed Safe Checkout */}
-      <div className="space-y-2 pt-3 border-t border-neutral-200">
-        <h4 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wide">
-          Guaranteed safe checkout
-        </h4>
-        <div className="flex items-center gap-2 flex-wrap pt-1">
-          <span className="bg-white border border-neutral-300 text-black text-xs font-black px-2.5 py-1 rounded-xs">
-            amazon pay
-          </span>
-          <span className="bg-[#002663] text-white text-xs font-bold px-2.5 py-1 rounded-xs">
-            AMEX
-          </span>
-          <span className="bg-white border border-neutral-300 text-black text-xs font-bold px-2.5 py-1 rounded-xs">
-            G Pay
-          </span>
-          <span className="bg-white border border-neutral-300 text-black text-xs font-bold px-2.5 py-1 rounded-xs">
-            Mastercard
-          </span>
-          <span className="bg-[#003087] text-white text-xs font-bold px-2.5 py-1 rounded-xs">
-            PayPal
-          </span>
-          <span className="bg-[#1A1F71] text-white text-xs font-extrabold px-2.5 py-1 rounded-xs">
-            VISA
-          </span>
-        </div>
-      </div>
 
       {/* 12. Social Share */}
       <div className="flex items-center gap-4 text-sm text-neutral-600 pt-2 border-t border-neutral-200">
@@ -503,6 +649,63 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </div>
         </div>
       )}
+
+      {/* Sticky Mobile Purchase Bar (Appears when main CTAs are scrolled off-screen on mobile) */}
+      <div
+        className={`fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200 p-3 transition-all duration-300 shadow-2xl md:hidden ${
+          showStickyBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative w-10 h-12 rounded-lg overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
+              <Image
+                src={product.primaryImage || ''}
+                alt={product.name}
+                fill
+                sizes="48px"
+                className="object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-neutral-900 truncate leading-snug">
+                {product.name}
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-xs font-extrabold text-neutral-900">
+                  {formatPrice(currentPrice)}
+                </span>
+                {selectedVariant.size && (
+                  <span className="text-[10px] font-bold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">
+                    {selectedVariant.size}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={addToCart.isPending}
+              className="h-10 px-4 bg-neutral-950 hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-95 shadow-md cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+            >
+              {addToCart.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Adding...</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

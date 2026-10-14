@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Container } from './Container';
 import { MobileMenu } from './MobileMenu';
 import { BrandLogo } from '@/components/common/BrandLogo';
@@ -21,14 +21,14 @@ import {
   User,
   Menu,
   ChevronDown,
+  X,
 } from 'lucide-react';
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const showSearchBar = pathname === '/' || pathname === '/shop';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const dropdownTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const navRef = React.useRef<HTMLElement>(null);
@@ -80,47 +80,32 @@ export function Header() {
     }
     dropdownTimeoutRef.current = setTimeout(() => {
       setActiveDropdown(null);
-    }, 250); // 250ms grace period so moving mouse to dropdown never closes prematurely
+    }, 250);
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      openSearch();
-    }
-  };
 
   const { data: dynamicCategories = [] } = useCategories();
 
   const categories = dynamicCategories.length > 0
     ? dynamicCategories.map((cat) => ({
-        label: cat.name,
-        href: `/shop?categoryId=${cat.id}`,
-      }))
+      label: cat.name,
+      href: `/shop?categoryId=${cat.id}`,
+    }))
     : [
-        { label: 'Men T-Shirt', href: '/shop' },
-      ];
+      { label: 'Men T-Shirt', href: '/shop' },
+    ];
 
   const policies = [
     { label: 'Shipping Policy', href: '/faq#shipping' },
     { label: 'Return & Refund Policy', href: '/faq#returns' },
-    { label: 'Privacy Policy', href: '/about#privacy' },
-    { label: 'Terms of Service', href: '/about#terms' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
   ];
 
   return (
     <>
-      <header className="w-full relative z-40 bg-white">
+      <header className="w-full sticky top-0 z-40 bg-white shadow-md">
         {/* TOP UTILITY & BRAND TIER (White) */}
         <div className="border-b border-neutral-200 py-3 md:py-4">
           <Container>
@@ -156,54 +141,44 @@ export function Header() {
               </div>
 
               {/* Central Pill Search Bar (Desktop) */}
-              <form
-                onSubmit={handleSearchSubmit}
-                className="hidden md:flex items-center flex-1 max-w-md mx-4 relative"
-              >
-                <input
-                  type="text"
-                  placeholder="Search our store"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#FAFAFA] border border-neutral-300 rounded-full py-2.5 pl-4 pr-11 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-black transition-colors"
-                />
-                <button
-                  type="submit"
-                  aria-label="Submit search"
-                  className="absolute right-1 top-1 bottom-1 px-3 text-neutral-600 hover:text-black flex items-center justify-center transition-colors"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </form>
+              {showSearchBar && (
+                <Suspense fallback={<HeaderSearchBarFallback />}>
+                  <HeaderSearchBar />
+                </Suspense>
+              )}
 
               {/* Right Side: Account, Wishlist & Cart */}
-              <div className="flex items-center gap-4 text-neutral-800">
+              <div className="flex items-center gap-2 sm:gap-4 text-neutral-800">
                 {/* Mobile Search button */}
-                <button
-                  type="button"
-                  onClick={openSearch}
-                  className="md:hidden p-1.5 text-neutral-800 hover:text-black transition-colors"
-                  aria-label="Search"
-                >
-                  <Search className="w-5 h-5" />
-                </button>
+                {showSearchBar && (
+                  <button
+                    type="button"
+                    onClick={openSearch}
+                    className="md:hidden p-1.5 text-neutral-800 hover:text-black transition-colors"
+                    aria-label="Search"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
+                )}
 
                 {/* Account / Login Trigger */}
                 {user ? (
                   <Link
                     href="/account"
-                    className="hidden sm:flex items-center gap-1.5 p-1.5 text-sm font-semibold text-neutral-800 hover:text-black transition-colors"
+                    className="flex items-center gap-1.5 p-1.5 text-sm font-semibold text-neutral-800 hover:text-black transition-colors"
+                    aria-label="Account"
                   >
                     <User className="w-5 h-5" />
-                    <span className="hidden lg:inline text-sm font-medium">
+                    {/* <span className="hidden lg:inline text-sm font-medium">
                       {user.firstName || 'Account'}
-                    </span>
+                    </span> */}
                   </Link>
                 ) : (
                   <button
                     type="button"
                     onClick={openAuthModal}
-                    className="hidden sm:flex items-center gap-1.5 p-1.5 text-sm font-semibold text-neutral-800 hover:text-black transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 p-1.5 text-sm font-semibold text-neutral-800 hover:text-black transition-colors cursor-pointer"
+                    aria-label="Login"
                   >
                     <User className="w-5 h-5" />
                     <span className="hidden lg:inline text-sm font-medium">Login</span>
@@ -260,9 +235,8 @@ export function Header() {
               <li>
                 <Link
                   href="/"
-                  className={`hover:text-sky-400 transition-colors ${
-                    pathname === '/' ? 'text-sky-400' : 'text-white'
-                  }`}
+                  className={`hover:text-sky-400 transition-colors ${pathname === '/' ? 'text-sky-400' : 'text-white'
+                    }`}
                 >
                   Home
                 </Link>
@@ -271,9 +245,8 @@ export function Header() {
               <li>
                 <Link
                   href="/shop"
-                  className={`hover:text-sky-400 transition-colors ${
-                    pathname === '/shop' ? 'text-sky-400' : 'text-white'
-                  }`}
+                  className={`hover:text-sky-400 transition-colors ${pathname === '/shop' ? 'text-sky-400' : 'text-white'
+                    }`}
                 >
                   Shop All
                 </Link>
@@ -290,15 +263,13 @@ export function Header() {
                   onClick={() =>
                     setActiveDropdown((prev) => (prev === 'category' ? null : 'category'))
                   }
-                  className={`flex items-center gap-1 uppercase transition-colors select-none cursor-pointer ${
-                    activeDropdown === 'category' ? 'text-sky-400' : 'text-white hover:text-sky-400'
-                  }`}
+                  className={`flex items-center gap-1 uppercase transition-colors select-none cursor-pointer ${activeDropdown === 'category' ? 'text-sky-400' : 'text-white hover:text-sky-400'
+                    }`}
                 >
                   <span>Category</span>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                      activeDropdown === 'category' ? 'rotate-180 text-sky-400' : ''
-                    }`}
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'category' ? 'rotate-180 text-sky-400' : ''
+                      }`}
                   />
                 </button>
 
@@ -327,9 +298,8 @@ export function Header() {
               <li>
                 <Link
                   href="/blogs"
-                  className={`hover:text-sky-400 transition-colors ${
-                    pathname.startsWith('/blogs') ? 'text-sky-400' : 'text-white'
-                  }`}
+                  className={`hover:text-sky-400 transition-colors ${pathname.startsWith('/blogs') ? 'text-sky-400' : 'text-white'
+                    }`}
                 >
                   Blogs
                 </Link>
@@ -346,15 +316,13 @@ export function Header() {
                   onClick={() =>
                     setActiveDropdown((prev) => (prev === 'policy' ? null : 'policy'))
                   }
-                  className={`flex items-center gap-1 uppercase transition-colors select-none cursor-pointer ${
-                    activeDropdown === 'policy' ? 'text-sky-400' : 'text-white hover:text-sky-400'
-                  }`}
+                  className={`flex items-center gap-1 uppercase transition-colors select-none cursor-pointer ${activeDropdown === 'policy' ? 'text-sky-400' : 'text-white hover:text-sky-400'
+                    }`}
                 >
                   <span>Policy</span>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                      activeDropdown === 'policy' ? 'rotate-180 text-sky-400' : ''
-                    }`}
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${activeDropdown === 'policy' ? 'rotate-180 text-sky-400' : ''
+                      }`}
                   />
                 </button>
 
@@ -383,9 +351,8 @@ export function Header() {
               <li>
                 <Link
                   href="/contact"
-                  className={`hover:text-sky-400 transition-colors ${
-                    pathname === '/contact' ? 'text-sky-400' : 'text-white'
-                  }`}
+                  className={`hover:text-sky-400 transition-colors ${pathname === '/contact' ? 'text-sky-400' : 'text-white'
+                    }`}
                 >
                   Contact
                 </Link>
@@ -402,40 +369,6 @@ export function Header() {
             </ul>
           </Container>
         </nav>
-
-        {/* STICKY COMPACT HEADER ON SCROLL */}
-        {isScrolled && (
-          <div className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-sm py-2.5 z-50 animate-in slide-in-from-top duration-200">
-            <Container>
-              <div className="flex items-center justify-between">
-                <BrandLogo size="sm" showTagline={false} />
-
-                <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-neutral-800 uppercase">
-                  <Link href="/" className="hover:text-black transition-colors">Home</Link>
-                  <Link href="/shop" className="hover:text-black transition-colors">Shop All</Link>
-                  <Link href="/shop?fit=oversized" className="hover:text-black transition-colors">Oversized</Link>
-                  <Link href="/shop?category=graphic" className="hover:text-black transition-colors">Graphic</Link>
-                  <Link href="/blogs" className="hover:text-black transition-colors">Blogs</Link>
-                  <Link href="/contact" className="hover:text-black transition-colors">Contact</Link>
-                </nav>
-
-                <div className="flex items-center gap-3">
-                  <button onClick={openSearch} className="p-1.5 text-neutral-800 hover:text-black" aria-label="Search">
-                    <Search className="w-4 h-4" />
-                  </button>
-                  <button onClick={openCart} className="relative p-1.5 text-neutral-800 hover:text-black" aria-label="Cart">
-                    <ShoppingBag className="w-4 h-4" />
-                    {totalCartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                        {totalCartCount}
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </Container>
-          </div>
-        )}
       </header>
 
       {/* Mobile Navigation Drawer */}
@@ -444,6 +377,81 @@ export function Header() {
         onClose={() => setIsMobileMenuOpen(false)}
       />
     </>
+  );
+}
+
+function HeaderSearchBar() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const q = searchParams.get('search') || searchParams.get('q') || '';
+    setQuery(q);
+  }, [searchParams]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = query.trim();
+    if (trimmed) {
+      router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
+    } else {
+      router.push('/shop');
+    }
+  };
+
+  const handleClear = () => {
+    setQuery('');
+    router.push('/shop');
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="hidden md:flex items-center flex-1 max-w-md mx-4 relative"
+    >
+      <input
+        type="text"
+        placeholder="Search our store"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="w-full bg-[#FAFAFA] border border-neutral-300 rounded-full py-2.5 pl-4 pr-16 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-black transition-colors"
+      />
+      {query && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="absolute right-9 top-1 bottom-1 px-1.5 text-neutral-400 hover:text-black flex items-center justify-center transition-colors cursor-pointer"
+          title="Clear search"
+          aria-label="Clear search"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+      <button
+        type="submit"
+        aria-label="Submit search"
+        className="absolute right-1 top-1 bottom-1 px-3 text-neutral-600 hover:text-black flex items-center justify-center transition-colors cursor-pointer"
+      >
+        <Search className="w-4 h-4" />
+      </button>
+    </form>
+  );
+}
+
+function HeaderSearchBarFallback() {
+  return (
+    <div className="hidden md:flex items-center flex-1 max-w-md mx-4 relative">
+      <input
+        type="text"
+        placeholder="Search our store"
+        disabled
+        className="w-full bg-[#FAFAFA] border border-neutral-300 rounded-full py-2.5 pl-4 pr-11 text-sm text-neutral-900 placeholder:text-neutral-400"
+      />
+      <div className="absolute right-1 top-1 bottom-1 px-3 text-neutral-400 flex items-center justify-center">
+        <Search className="w-4 h-4" />
+      </div>
+    </div>
   );
 }
 

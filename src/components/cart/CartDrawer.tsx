@@ -6,12 +6,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Drawer } from '@/components/ui/Drawer';
 import { Button } from '@/components/ui/Button';
-import { ShippingProgressBar } from './ShippingProgressBar';
 import { formatPrice } from '@/utils/formatters';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/hooks/useCart';
 import { cartService } from '@/services/cart.service';
 import { useUI } from '@/context/UIContext';
-import { Trash2, ArrowRight, Tag } from 'lucide-react';
+import { Trash2, ArrowRight, Tag, Loader2 } from 'lucide-react';
 
 export function CartDrawer() {
   const router = useRouter();
@@ -69,15 +68,11 @@ export function CartDrawer() {
       onClose={closeCart}
       title={`Your Cart (${items.reduce((s, i) => s + i.quantity, 0)})`}
       width="max-w-md"
+      bodyClassName="p-0 flex flex-col flex-1 min-h-0 overflow-hidden"
     >
-      <div className="flex flex-col h-full justify-between -mx-6 -my-6">
-        {/* Top Progress Indicator */}
-        <div className="p-6 pb-4">
-          <ShippingProgressBar subtotal={subtotal} />
-        </div>
-
+      <div className="flex flex-col h-full flex-1 min-h-0 justify-between bg-[#F7F6F2]">
         {/* Cart Item List */}
-        <div className="flex-1 overflow-y-auto px-6 divide-y divide-[#E6E3DD]">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 divide-y divide-[#E6E3DD]">
           {items.length === 0 ? (
             <div className="py-20 text-center space-y-4">
               <p className="text-xs uppercase tracking-widest font-medium text-[#171717]">
@@ -128,10 +123,15 @@ export function CartDrawer() {
                       </Link>
                       <button
                         onClick={() => handleRemove(item.id, item.productName || 'item')}
-                        className="text-neutral-400 hover:text-red-500 transition-colors p-0.5 cursor-pointer"
+                        disabled={removeItem.isPending && removeItem.variables === item.id}
+                        className="text-neutral-400 hover:text-red-500 transition-colors p-0.5 cursor-pointer disabled:cursor-not-allowed"
                         aria-label="Remove item"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {removeItem.isPending && removeItem.variables === item.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
 
@@ -147,16 +147,24 @@ export function CartDrawer() {
                     <div className="inline-flex items-center border border-neutral-300 bg-white h-8">
                       <button
                         onClick={() => handleUpdateQty(item.id, item.quantity, -1)}
-                        className="w-8 h-full flex items-center justify-center text-sm font-bold hover:bg-neutral-100 transition-colors cursor-pointer"
+                        disabled={item.quantity <= 1 || (updateItem.isPending && updateItem.variables?.itemId === item.id)}
+                        className="w-8 h-full flex items-center justify-center text-sm font-bold hover:bg-neutral-100 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Decrease quantity"
                       >
                         –
                       </button>
-                      <span className="w-7 text-center text-xs sm:text-sm font-bold select-none">
-                        {item.quantity}
+                      <span className="w-7 text-center text-xs sm:text-sm font-bold select-none flex items-center justify-center">
+                        {updateItem.isPending && updateItem.variables?.itemId === item.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin text-neutral-700" />
+                        ) : (
+                          item.quantity
+                        )}
                       </span>
                       <button
                         onClick={() => handleUpdateQty(item.id, item.quantity, 1)}
-                        className="w-8 h-full flex items-center justify-center text-sm font-bold hover:bg-neutral-100 transition-colors cursor-pointer"
+                        disabled={updateItem.isPending && updateItem.variables?.itemId === item.id}
+                        className="w-8 h-full flex items-center justify-center text-sm font-bold hover:bg-neutral-100 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Increase quantity"
                       >
                         +
                       </button>
@@ -175,7 +183,7 @@ export function CartDrawer() {
 
         {/* Footer Subtotal & Checkout CTA */}
         {items.length > 0 && (
-          <div className="border-t border-neutral-200 bg-white p-6 space-y-4">
+          <div className="border-t border-neutral-200 bg-white p-6 space-y-4 shrink-0 mt-auto">
             {/* Promo Code Input */}
             <form onSubmit={handleApplyCoupon} className="flex gap-2">
               <div className="relative flex-1">
@@ -191,9 +199,16 @@ export function CartDrawer() {
               <button
                 type="submit"
                 disabled={isApplyingCoupon || !couponCode.trim()}
-                className="px-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-50 transition-colors cursor-pointer"
+                className="px-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5 min-w-[75px] justify-center"
               >
-                Apply
+                {isApplyingCoupon ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Applying...</span>
+                  </>
+                ) : (
+                  'Apply'
+                )}
               </button>
             </form>
 

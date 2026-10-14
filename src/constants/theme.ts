@@ -27,8 +27,8 @@ export const THEME = {
     supportPhone: '+91-9235831306',
     address: 'Inkstyles Hub, Sector 63, Noida, Uttar Pradesh 201301',
     announcements: [
-      '🔥 FREE SHIPPING ON PREPAID ORDERS',
-      '⚡ 10% OFF ON YOUR FIRST ORDER - CODE: FIRST10',
+      '⚡ EXTRA 5% OFF ON ALL ONLINE PAYMENTS',
+      '🔥 FREE EXPRESS SHIPPING ALL OVER INDIA',
       '📦 CASH ON DELIVERY AVAILABLE NATIONWIDE',
       '✨ NEW ARRIVALS: OVERSIZED & GRAPHIC DROP IS LIVE',
     ],

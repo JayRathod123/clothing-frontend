@@ -1,6 +1,6 @@
 export function formatPrice(amount: number): string {
-  if (typeof amount !== 'number' || isNaN(amount)) return 'Rs. 0.00';
-  return `Rs. ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (typeof amount !== 'number' || isNaN(amount)) return 'Rs.\u00A00.00';
+  return `Rs.\u00A0${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatGsm(gsm?: number): string {

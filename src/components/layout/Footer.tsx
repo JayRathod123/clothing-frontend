@@ -3,19 +3,25 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { THEME } from '@/constants/theme';
+import { Loader2 } from 'lucide-react';
 
 export function Footer() {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      setIsSubscribed(true);
+      setIsSubmitting(true);
       setTimeout(() => {
-        setIsSubscribed(false);
-        setEmail('');
-      }, 3000);
+        setIsSubmitting(false);
+        setIsSubscribed(true);
+        setTimeout(() => {
+          setIsSubscribed(false);
+          setEmail('');
+        }, 3000);
+      }, 500);
     }
   };
 
@@ -119,7 +125,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/about#terms" className="hover:text-white transition-colors">
+                <Link href="/terms" className="hover:text-white transition-colors">
                   Terms of service
                 </Link>
               </li>
@@ -186,36 +192,42 @@ export function Footer() {
                 />
                 <button
                   type="submit"
-                  className="bg-neutral-800 text-white font-extrabold text-sm px-5 py-3 rounded-sm hover:bg-neutral-700 transition-colors whitespace-nowrap cursor-pointer"
+                  disabled={isSubmitting || !email}
+                  className="bg-neutral-800 text-white font-extrabold text-sm px-5 py-3 rounded-sm hover:bg-neutral-700 disabled:opacity-60 transition-colors whitespace-nowrap cursor-pointer flex items-center gap-2 justify-center"
                 >
-                  {isSubscribed ? 'Subscribed!' : 'Get 20% off'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Joining...</span>
+                    </>
+                  ) : isSubscribed ? (
+                    'Subscribed!'
+                  ) : (
+                    'Get 20% off'
+                  )}
                 </button>
               </div>
             </form>
 
-            <div className="pt-4 space-y-2">
+            {/* <div className="pt-4 space-y-2">
               <h5 className="text-xs sm:text-sm font-extrabold text-white uppercase tracking-wider">
                 We Accept
               </h5>
               <div className="flex items-center gap-2 flex-wrap">
-                {/* Amazon Pay Badge */}
                 <span className="bg-white text-black text-xs font-black px-3 py-1 rounded-sm">
                   amazon pay
                 </span>
-                {/* GPay */}
                 <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-sm">
                   G Pay
                 </span>
-                {/* Mastercard */}
                 <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-sm">
                   Mastercard
                 </span>
-                {/* Visa */}
                 <span className="bg-[#1A1F71] text-white text-xs font-extrabold px-3 py-1 rounded-sm">
                   VISA
                 </span>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -223,11 +235,11 @@ export function Footer() {
         <div className="pt-8 border-t border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-neutral-400">
           <p>© {new Date().getFullYear()}, {THEME.store.name}. All Rights Reserved.</p>
           <div className="flex items-center gap-4">
-            <Link href="/about#privacy" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy
             </Link>
             <span>•</span>
-            <Link href="/about#terms" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
             <span>•</span>

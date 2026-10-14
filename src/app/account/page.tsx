@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Container } from '@/components/layout/Container';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -13,12 +14,13 @@ import { useUI } from '@/context/UIContext';
 import { Package, User as UserIcon, LogOut, ArrowRight } from 'lucide-react';
 
 export default function AccountPage() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
   const { openAuthModal } = useUI();
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['myOrders'],
+    queryKey: ['myOrders', isAuthenticated],
     queryFn: () => orderService.getMyOrders(),
+    enabled: Boolean(isAuthenticated),
   });
 
   if (!isAuthenticated && !user) {
@@ -65,6 +67,7 @@ export default function AccountPage() {
             <Button
               variant="outline"
               size="sm"
+              isLoading={isLoggingOut}
               onClick={() => logout()}
               className="gap-2"
             >
@@ -75,9 +78,20 @@ export default function AccountPage() {
 
           {/* Orders Section */}
           <div className="space-y-6">
-            <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#171717]">
-              Recent Orders ({orders.length})
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs uppercase tracking-[0.2em] font-semibold text-[#171717]">
+                Recent Orders ({orders.length})
+              </h3>
+              {orders.length > 0 && (
+                <Link
+                  href="/account/orders"
+                  className="text-xs font-semibold text-[#8A6A45] hover:underline inline-flex items-center gap-1"
+                >
+                  <span>View All & Track</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
+            </div>
 
             {orders.length === 0 ? (
               <div className="bg-white border border-[#E6E3DD] p-12 text-center space-y-3">
@@ -112,7 +126,7 @@ export default function AccountPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge variant="surface">
-                          {order.status.toUpperCase()}
+                          {order.status?.toUpperCase() || 'PENDING'}
                         </Badge>
                         <span className="font-semibold text-[#171717]">
                           {formatPrice(order.totalAmount)}
@@ -121,20 +135,39 @@ export default function AccountPage() {
                     </div>
 
                     <div className="divide-y divide-[#E6E3DD]/60">
-                      {order.items.map((item) => (
+                      {(order.items || []).map((item) => (
                         <div
                           key={item.id}
-                          className="py-2.5 flex items-center justify-between text-xs"
+                          className="py-3 flex items-center justify-between gap-4 text-xs"
                         >
-                          <div>
-                            <p className="font-semibold text-[#171717]">
-                              {item.productName}
-                            </p>
-                            <p className="text-[11px] text-[#686868]">
-                              Size: {item.size} • Qty: {item.quantity}
-                            </p>
+                          <div className="flex items-center gap-3">
+                            {item.productImage ? (
+                              <div className="relative w-12 h-14 bg-neutral-100 border border-neutral-200 shrink-0 overflow-hidden">
+                                <Image
+                                  src={item.productImage}
+                                  alt={item.productName}
+                                  fill
+                                  sizes="50px"
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-14 bg-neutral-100 border border-neutral-200 shrink-0 flex items-center justify-center text-neutral-400">
+                                <Package className="w-5 h-5" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold text-[#171717]">
+                                {item.productName}
+                              </p>
+                              <p className="text-[11px] text-[#686868]">
+                                {item.size ? `Size: ${item.size} • ` : ''}
+                                {item.sku ? `SKU: ${item.sku} • ` : ''}
+                                Qty: {item.quantity}
+                              </p>
+                            </div>
                           </div>
-                          <span className="font-medium text-[#171717]">
+                          <span className="font-medium text-[#171717] shrink-0">
                             {formatPrice(item.totalPrice)}
                           </span>
                         </div>
@@ -143,9 +176,9 @@ export default function AccountPage() {
 
                     <div className="flex items-center justify-between pt-2 text-[11px] text-[#686868]">
                       <span>
-                        Shipping to: {order.shippingAddress.fullName} ({order.shippingAddress.city})
+                        Shipping to: {order.shippingAddress?.fullName || 'Customer'} {order.shippingAddress?.city ? `(${order.shippingAddress.city})` : ''}
                       </span>
-                      <span>Payment: {order.paymentMethod}</span>
+                      <span>Payment: {order.paymentMethod || 'Prepaid'}</span>
                     </div>
                   </div>
                 ))}

@@ -39,18 +39,19 @@ export const shippingService = {
   // Calculate shipping charges
   async calculateShipping(subtotal: number, pincode?: string): Promise<ShippingCalculation> {
     try {
-      if (pincode) {
+      if (pincode && pincode.trim().length === 6) {
         const response = await axiosInstance.post<ApiResponse<any>>('/api/shipping/calculate', {
           subtotal,
-          pincode,
+          pincode: pincode.trim(),
         });
         if (response.data.success && response.data.data) {
+          const fee = response.data.data.shippingCharge ?? response.data.data.fee ?? 0;
           return {
             subtotal,
-            shippingCharge: response.data.data.shippingCharge ?? (subtotal >= THEME.thresholds.freeShipping ? 0 : 99),
-            isFreeShipping: subtotal >= THEME.thresholds.freeShipping,
-            freeShippingThreshold: THEME.thresholds.freeShipping,
-            amountNeededForFreeShipping: Math.max(0, THEME.thresholds.freeShipping - subtotal),
+            shippingCharge: fee,
+            isFreeShipping: fee === 0,
+            freeShippingThreshold: response.data.data.freeShippingThreshold || THEME.thresholds.freeShipping,
+            amountNeededForFreeShipping: Math.max(0, (response.data.data.freeShippingThreshold || THEME.thresholds.freeShipping) - subtotal),
           };
         }
       }

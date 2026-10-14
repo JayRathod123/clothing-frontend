@@ -10,6 +10,7 @@ interface DrawerProps {
   children: React.ReactNode;
   position?: 'right' | 'left';
   width?: string;
+  bodyClassName?: string;
 }
 
 export function Drawer({
@@ -19,6 +20,7 @@ export function Drawer({
   children,
   position = 'right',
   width = 'max-w-md',
+  bodyClassName,
 }: DrawerProps) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -82,7 +84,7 @@ export function Drawer({
         }`}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#E6E3DD] bg-white">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[#E6E3DD] bg-white shrink-0">
           <h2 className="text-xs uppercase tracking-widest font-semibold text-[#171717]">
             {title || ''}
           </h2>
@@ -96,7 +98,9 @@ export function Drawer({
         </div>
 
         {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+        <div className={`flex-1 min-h-0 ${bodyClassName !== undefined ? bodyClassName : 'overflow-y-auto p-6'}`}>
+          {children}
+        </div>
       </div>
     </div>
   );

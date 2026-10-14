@@ -8,18 +8,91 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUI } from '@/context/UIContext';
 
 export function AuthModal() {
-  const { isAuthModalOpen, closeAuthModal, showToast } = useUI();
-  const { user, login, isLoggingIn, register, isRegistering, logout, isAuthenticated } = useAuth();
+  const { isAuthModalOpen, authModalMode, closeAuthModal, showToast } = useUI();
+  const { user, login, isLoggingIn, register, isRegistering, logout, isLoggingOut, isAuthenticated } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const validateField = (name: string, value: string): string => {
+    const val = (value || '').trim();
+    switch (name) {
+      case 'email':
+        if (!val) return 'Email address is required';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Please enter a valid email address';
+        return '';
+      case 'password':
+        if (!val) return 'Password is required';
+        if (val.length < 6) return 'Password must be at least 6 characters';
+        return '';
+      case 'phone':
+        if (mode === 'register' && val) {
+          const digits = val.replace(/\D/g, '');
+          if (digits.length < 10) return 'Please enter a valid 10-digit phone number';
+        }
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const handleBlur = (fieldName: string, value: string) => {
+    setTouched((prev) => ({ ...prev, [fieldName]: true }));
+    const err = validateField(fieldName, value);
+    setErrors((prev) => ({ ...prev, [fieldName]: err }));
+  };
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    if (touched.email) {
+      setErrors((prev) => ({ ...prev, email: validateField('email', val) }));
+    }
+  };
+
+  const handlePasswordChange = (val: string) => {
+    setPassword(val);
+    if (touched.password) {
+      setErrors((prev) => ({ ...prev, password: validateField('password', val) }));
+    }
+  };
+
+  const handlePhoneChange = (val: string) => {
+    setPhone(val);
+    if (touched.phone) {
+      setErrors((prev) => ({ ...prev, phone: validateField('phone', val) }));
+    }
+  };
+
+  React.useEffect(() => {
+    if (authModalMode) {
+      setMode(authModalMode);
+    }
+    setErrors({});
+    setTouched({});
+  }, [authModalMode, isAuthModalOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      showToast('Please enter your email', 'error');
+
+    const emailErr = validateField('email', email);
+    const passwordErr = validateField('password', password);
+    const phoneErr = validateField('phone', phone);
+
+    const newErrors: Record<string, string> = {
+      email: emailErr,
+      password: passwordErr,
+      phone: phoneErr,
+    };
+
+    setTouched({ email: true, password: true, phone: true });
+    setErrors(newErrors);
+
+    if (emailErr || passwordErr || (mode === 'register' && phoneErr)) {
       return;
     }
 
@@ -35,8 +108,11 @@ export function AuthModal() {
       setEmail('');
       setPassword('');
       setPhone('');
-    } catch {
-      showToast('Authentication failed. Please try again.', 'error');
+      setErrors({});
+      setTouched({});
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Authentication failed. Please try again.';
+      showToast(msg, 'error');
     }
   };
 
@@ -77,6 +153,7 @@ export function AuthModal() {
               variant="secondary"
               size="md"
               fullWidth
+              isLoading={isLoggingOut}
               onClick={handleLogout}
             >
               Sign Out
@@ -109,14 +186,15 @@ export function AuthModal() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <Input
               label="Email Address"
               type="email"
-              required
               placeholder="e.g. name@domain.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              onBlur={() => handleBlur('email', email)}
+              error={touched.email ? errors.email : undefined}
             />
 
             <Input
@@ -124,16 +202,23 @@ export function AuthModal() {
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => handlePasswordChange(e.target.value)}
+              onBlur={() => handleBlur('password', password)}
+              error={touched.password ? errors.password : undefined}
             />
 
             {mode === 'register' && (
               <Input
                 label="Phone Number (Optional)"
                 type="tel"
-                placeholder="+91 98765 43210"
+                inputMode="numeric"
+                maxLength={10}
+                prefixText="+91"
+                placeholder="98765 43210"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                onBlur={() => handleBlur('phone', phone)}
+                error={touched.phone ? errors.phone : undefined}
               />
             )}
 

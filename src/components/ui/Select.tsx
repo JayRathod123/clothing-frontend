@@ -160,7 +160,7 @@ export const Select: React.FC<SelectProps> = ({
   // Variant variations
   const variantStyles = {
     default:
-      'bg-white border border-neutral-300 hover:border-neutral-900 focus:border-black rounded-none shadow-2xs',
+      'bg-white border border-neutral-200/90 hover:border-neutral-900 focus:border-black rounded-xl shadow-2xs hover:shadow-xs transition-all',
     minimal:
       'bg-transparent border-b border-neutral-300 hover:border-black focus:border-black rounded-none px-1 py-1.5 shadow-none',
     pill:
@@ -226,7 +226,7 @@ export const Select: React.FC<SelectProps> = ({
           ref={menuRef}
           role="listbox"
           tabIndex={-1}
-          className={`absolute z-50 mt-1.5 w-full min-w-[200px] bg-white border border-neutral-200/90 shadow-xl shadow-black/10 py-1.5 max-h-64 overflow-y-auto outline-none transition-all duration-150 ease-out animate-in fade-in-0 zoom-in-95 ${
+          className={`absolute z-50 mt-1.5 w-full min-w-[200px] bg-white border border-neutral-200/90 shadow-xl shadow-black/10 rounded-xl p-1.5 max-h-64 overflow-y-auto outline-none transition-all duration-150 ease-out animate-in fade-in-0 zoom-in-95 ${
             align === 'right' ? 'right-0' : 'left-0'
           } ${menuClassName}`}
           style={{ top: '100%' }}
@@ -244,13 +244,13 @@ export const Select: React.FC<SelectProps> = ({
                 disabled={option.disabled}
                 onClick={() => handleSelect(option.value)}
                 onMouseEnter={() => setHighlightedIndex(index)}
-                className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm tracking-wide transition-colors cursor-pointer select-none ${
+                className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2.5 text-xs sm:text-sm tracking-wide transition-colors cursor-pointer select-none rounded-lg ${
                   option.disabled
                     ? 'opacity-40 cursor-not-allowed text-neutral-400'
                     : isSelected
-                    ? 'bg-neutral-50 text-black font-bold'
+                    ? 'bg-neutral-900 text-white font-bold shadow-2xs'
                     : isHighlighted
-                    ? 'bg-neutral-100/70 text-neutral-900 font-medium'
+                    ? 'bg-neutral-100 text-neutral-900 font-medium'
                     : 'text-neutral-700 hover:bg-neutral-100/70'
                 }`}
               >

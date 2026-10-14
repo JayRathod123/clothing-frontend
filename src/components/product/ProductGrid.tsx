@@ -18,7 +18,7 @@ export function ProductGrid({ products, isLoading = false, columns = 4 }: Produc
 
   if (isLoading) {
     return (
-      <div className={`grid ${colClass} gap-x-3 gap-y-8 md:gap-x-6 md:gap-y-12`}>
+      <div className={`grid ${colClass} gap-x-3 gap-y-6 sm:gap-y-8 md:gap-x-5 md:gap-y-10 lg:gap-x-6 lg:gap-y-12`}>
         {Array.from({ length: 8 }).map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}
@@ -27,7 +27,7 @@ export function ProductGrid({ products, isLoading = false, columns = 4 }: Produc
   }
 
   return (
-    <div className={`grid ${colClass} gap-x-3 gap-y-8 md:gap-x-6 md:gap-y-12`}>
+    <div className={`grid ${colClass} gap-x-3 gap-y-6 sm:gap-y-8 md:gap-x-5 md:gap-y-10 lg:gap-x-6 lg:gap-y-12 items-start`}>
       {products.map((product, idx) => (
         <ProductCard key={product.id} product={product} priority={idx < 4} />
       ))}

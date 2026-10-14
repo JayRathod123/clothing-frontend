@@ -45,7 +45,7 @@ export function HomeBlogsBlock() {
     <section className="py-16 bg-[#FFFFFF] border-t border-neutral-100">
       <Container>
         <div className="text-center mb-10 space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-neutral-900 tracking-tight">
             Latest Blog
           </h2>
           <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto">

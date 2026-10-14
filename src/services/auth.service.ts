@@ -1,96 +1,117 @@
 import axiosInstance from '@/lib/axiosInstance';
+import axios from 'axios';
 import { User, LoginDto, RegisterDto } from '@/types/auth.types';
 import { ApiResponse } from '@/types/api.types';
-import { setStoredAuthTokens, clearStoredAuthTokens, getStoredAccessToken } from '@/utils/storage';
+import {
+  setStoredAuthTokens,
+  clearStoredAuthTokens,
+  getStoredAccessToken,
+  getStoredRefreshToken,
+} from '@/utils/storage';
 
 const LOCAL_USER_KEY = 'aura_cached_user_profile';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'http://192.168.1.15:5012';
 
 export const authService = {
-  // Login
+  // Login with backend API
   async login(dto: LoginDto): Promise<User> {
-    try {
-      const response = await axiosInstance.post<ApiResponse<any>>('/api/auth/login', dto);
-      if (response.data.success && response.data.data?.accessToken) {
-        setStoredAuthTokens(response.data.data.accessToken, response.data.data.refreshToken);
-        const profile = await this.getProfile();
-        if (profile) return profile;
-      }
-    } catch (err: any) {
-      console.warn('API /api/auth/login failed, simulating customer login', err);
-    }
+    const response = await axiosInstance.post<any>('/api/auth/login', dto);
+    const resData = response.data;
+    const data = resData?.data?.data || resData?.data || resData;
 
-    // Local simulation fallback
-    const simulatedUser: User = {
-      id: `usr_${Date.now()}`,
-      email: dto.email,
-      role: 'customer',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(simulatedUser));
-      setStoredAuthTokens('mock_jwt_token_aura');
+    if (data?.accessToken) {
+      setStoredAuthTokens(data.accessToken, data.refreshToken);
+      const profile = await this.getProfile();
+      if (profile) return profile;
+      return data.user;
     }
-    return simulatedUser;
+    throw new Error(resData?.message || 'Login failed');
   },
 
-  // Register
+  // Register with backend API
   async register(dto: RegisterDto): Promise<User> {
-    try {
-      const response = await axiosInstance.post<ApiResponse<any>>('/api/auth/register', dto);
-      if (response.data.success && response.data.data?.accessToken) {
-        setStoredAuthTokens(response.data.data.accessToken, response.data.data.refreshToken);
-        const profile = await this.getProfile();
-        if (profile) return profile;
-      }
-    } catch (err: any) {
-      console.warn('API /api/auth/register failed, simulating registration', err);
-    }
+    const response = await axiosInstance.post<any>('/api/auth/register', dto);
+    const resData = response.data;
+    const data = resData?.data?.data || resData?.data || resData;
 
-    const simulatedUser: User = {
-      id: `usr_${Date.now()}`,
-      email: dto.email,
-      phone: dto.phone,
-      role: 'customer',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(simulatedUser));
-      setStoredAuthTokens('mock_jwt_token_aura');
+    if (data?.accessToken) {
+      setStoredAuthTokens(data.accessToken, data.refreshToken);
+      const profile = await this.getProfile();
+      if (profile) return profile;
+      return data.user;
     }
-    return simulatedUser;
+    throw new Error(resData?.message || 'Registration failed');
   },
 
-  // Get current user profile
-  async getProfile(): Promise<User | null> {
-    const token = getStoredAccessToken();
-    if (!token) {
+  // Refresh access token via /api/auth/refresh
+  async refreshToken(): Promise<{ accessToken: string; refreshToken: string } | null> {
+    const refreshToken = getStoredRefreshToken();
+    if (!refreshToken) return null;
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/auth/refresh`,
+        { refreshToken },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          timeout: 10000,
+        }
+      );
+
+      const resData = response.data;
+      const data = resData?.data?.data || resData?.data || resData;
+      const newAccessToken = data?.accessToken;
+      const newRefreshToken = data?.refreshToken || refreshToken;
+
+      if (newAccessToken) {
+        setStoredAuthTokens(newAccessToken, newRefreshToken);
+        return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+      }
+    } catch {
+      clearStoredAuthTokens();
       if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem(LOCAL_USER_KEY);
-        if (cached) return JSON.parse(cached);
+        localStorage.removeItem(LOCAL_USER_KEY);
       }
       return null;
     }
 
-    try {
-      const response = await axiosInstance.get<ApiResponse<User>>('/api/auth/me');
-      if (response.data.success && response.data.data) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(response.data.data));
-        }
-        return response.data.data;
-      }
-    } catch (err) {
-      console.warn('API /api/auth/me fallback', err);
+    return null;
+  },
+
+  // Get current user profile from /api/auth/me
+  async getProfile(): Promise<User | null> {
+    const token = getStoredAccessToken();
+    if (!token || token === 'mock_jwt_token_aura') {
+      return null;
     }
 
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(LOCAL_USER_KEY);
-      if (cached) return JSON.parse(cached);
+    try {
+      const response = await axiosInstance.get<any>('/api/auth/me');
+      const resData = response.data;
+      const profile = resData?.data?.data || resData?.data || resData;
+
+      if (profile && (profile.id || profile.email)) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(profile));
+        }
+        return profile;
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        clearStoredAuthTokens();
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(LOCAL_USER_KEY);
+        }
+        return null;
+      }
     }
+
     return null;
   },
 
@@ -103,5 +124,7 @@ export const authService = {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(LOCAL_USER_KEY);
     }
-  }
+  },
 };
+
+export default authService;

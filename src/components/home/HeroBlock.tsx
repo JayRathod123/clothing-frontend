@@ -1,209 +1,204 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowDown, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useBanners } from '@/hooks/useBanners';
+import { Banner } from '@/services/banner.service';
 
-export interface HeroSlide {
-  id: string;
-  image: string;
-  kicker: string;
-  heading: string;
-  highlightText?: string;
-  subtitle: string;
-  primaryCtaText: string;
-  primaryCtaLink: string;
-  secondaryCtaText: string;
-  secondaryCtaLink: string;
-}
-
-const DEFAULT_SLIDES: HeroSlide[] = [
+// Fallback promotional banner images when backend has no banners configured yet
+const FALLBACK_BANNERS: Partial<Banner>[] = [
   {
-    id: 'slide-1',
-    image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=85&w=2000&auto=format&fit=crop',
-    kicker: 'NEW DROP // 240 GSM ESSENTIALS',
-    heading: 'WEAR YOUR ATTITUDE.',
-    highlightText: 'DROP 04 LIVE NOW',
-    subtitle: 'Heavyweight French Terry silhouettes engineered with an intentional boxy drop shoulder, structured ribbed collar, and zero post-wash shrinkage.',
-    primaryCtaText: 'SHOP NOW',
-    primaryCtaLink: '/shop',
-    secondaryCtaText: 'EXPLORE COLLECTION',
-    secondaryCtaLink: '/shop?fit=oversized',
+    id: 'fallback-1',
+    title: 'Streetwear Collection',
+    imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=85&w=2200&auto=format&fit=crop',
+    linkUrl: '/shop',
   },
   {
-    id: 'slide-2',
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=85&w=2000&auto=format&fit=crop',
-    kicker: 'STREETWEAR MERCHANDISE // 100% COTTON',
-    heading: 'OVERSIZED SILHOUETTES.',
-    highlightText: 'ENGINEERED DRAPE',
-    subtitle: 'Cut with high-density architectural proportions that drape cleanly without clinging. The foundation of everyday modern rotation.',
-    primaryCtaText: 'SHOP OVERSIZED',
-    primaryCtaLink: '/shop?fit=oversized',
-    secondaryCtaText: 'VIEW SIZE GUIDE',
-    secondaryCtaLink: '/size-chart',
+    id: 'fallback-2',
+    title: 'Oversized Silhouette Essentials',
+    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=85&w=2200&auto=format&fit=crop',
+    linkUrl: '/shop?fit=oversized',
   },
   {
-    id: 'slide-3',
-    image: 'https://images.unsplash.com/photo-1544441893-675973e31985?q=85&w=2000&auto=format&fit=crop',
-    kicker: 'GRAPHIC CAPSULE // LIMITED DROP',
-    heading: 'RAW TACTILE PRINTS.',
-    highlightText: 'LIMITED RUNS',
-    subtitle: 'Screen printed with high-density plastisol and silicon softeners on bio-washed heavyweight cotton.',
-    primaryCtaText: 'SHOP GRAPHIC TEES',
-    primaryCtaLink: '/shop?category=graphic',
-    secondaryCtaText: 'ALL PRODUCTS',
-    secondaryCtaLink: '/shop',
+    id: 'fallback-3',
+    title: 'Minimalist Graphic Capsule',
+    imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=85&w=2200&auto=format&fit=crop',
+    linkUrl: '/shop?category=graphic',
+  },
+  {
+    id: 'fallback-4',
+    title: 'Urban Heavyweight Drop',
+    imageUrl: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=85&w=2200&auto=format&fit=crop',
+    linkUrl: '/shop',
   },
 ];
 
-export interface HeroBlockProps {
-  slides?: HeroSlide[];
-}
-
-export function HeroBlock({ slides = DEFAULT_SLIDES }: HeroBlockProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
+export function HeroBlock() {
+  const { data: apiBanners, isLoading, isPending } = useBanners('homepage_hero');
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+
+  const isBannerPending = isLoading || isPending || apiBanners === undefined;
+
+  // Use API banners if available
+  const activeBanners =
+    apiBanners && apiBanners.length > 0
+      ? apiBanners.filter((b) => b.isActive !== false && b.imageUrl)
+      : [];
+
+  const slides = activeBanners.length > 0 ? activeBanners : FALLBACK_BANNERS;
 
   const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
   }, [slides.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   }, [slides.length]);
 
+  // Autoplay slider (4.5s)
   useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => {
+    if (isPaused || slides.length <= 1) return;
+    const interval = setInterval(() => {
       nextSlide();
-    }, 5500);
-    return () => clearInterval(timer);
-  }, [isPaused, nextSlide]);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isPaused, nextSlide, slides.length]);
 
-  const scrollToNext = () => {
-    const nextSection = document.getElementById('featured-drop') || document.getElementById('categories-split');
-    if (nextSection) {
-      nextSection.scrollIntoView({ behavior: 'smooth' });
+  // Keep index within bounds if slide count changes
+  useEffect(() => {
+    if (currentIndex >= slides.length) {
+      setCurrentIndex(0);
     }
+  }, [slides.length, currentIndex]);
+
+  // Mobile touch swipe gestures
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
   };
 
-  const slide = slides[currentSlide];
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (diff > 50) {
+      nextSlide();
+    } else if (diff < -50) {
+      prevSlide();
+    }
+    touchStartX.current = null;
+  };
+
+  // Show sleek skeleton banner while API is pending (after all hooks are called)
+  if (isBannerPending) {
+    return (
+      <section className="relative w-full overflow-hidden bg-neutral-100">
+        <div className="relative w-full aspect-[16/7] sm:aspect-[18/7] md:aspect-[21/8] lg:aspect-[24/8] min-h-[220px] sm:min-h-[320px] md:min-h-[420px] lg:min-h-[500px] bg-neutral-200 animate-pulse" />
+      </section>
+    );
+  }
 
   return (
     <section
-      className="relative w-full h-[88vh] min-h-[600px] max-h-[920px] overflow-hidden bg-black select-none"
+      aria-label="Promotional Hero Banners"
+      className="relative w-full overflow-hidden bg-neutral-950 group select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Background Slides with Cross-Fade */}
-      {slides.map((s, index) => {
-        const isActive = index === currentSlide;
-        return (
-          <div
-            key={s.id}
-            className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-              isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10 pointer-events-none'
-            }`}
-          >
-            <Image
-              src={s.image}
-              alt={s.heading}
-              fill
-              priority={index === 0}
-              sizes="100vw"
-              className="object-cover object-[center_30%]"
-            />
-            {/* Cinematic Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
-          </div>
-        );
-      })}
+      {/* Responsive Aspect Ratio Banner Container */}
+      <div className="relative w-full aspect-[16/7] sm:aspect-[18/7] md:aspect-[21/8] lg:aspect-[24/8] min-h-[220px] sm:min-h-[320px] md:min-h-[420px] lg:min-h-[500px]">
+        {/* Horizontal Sliding Track */}
+        <div
+          className="flex h-full w-full transition-transform duration-700 ease-out will-change-transform"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {slides.map((banner, index) => {
+            const linkHref = banner.linkUrl || '/shop';
+            const imgUrl =
+              banner.imageUrl ||
+              'https://images.unsplash.com/photo-1509631179647-0177331693ae?q=85&w=2200&auto=format&fit=crop';
 
-      {/* Hero Content */}
-      <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-between py-12 md:py-16 text-white">
-        {/* Eyebrow Kicker */}
-        <div className="pt-2">
-          <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/95 border border-white/30 bg-black/40 backdrop-blur-md px-3.5 py-1.5 shadow-xs">
-            <Sparkles className="w-3 h-3 text-red-500 animate-pulse" />
-            <span>{slide.kicker}</span>
-          </div>
+            return (
+              <div
+                key={banner.id || `slide-${index}`}
+                className="relative h-full w-full flex-shrink-0"
+              >
+                <Link
+                  href={linkHref}
+                  className="block relative w-full h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  aria-label={banner.title || `Promotional Banner ${index + 1}`}
+                  tabIndex={index === currentIndex ? 0 : -1}
+                >
+                  <Image
+                    src={imgUrl}
+                    alt={banner.title || 'Promotional Banner'}
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className="object-cover object-center transition-transform duration-700 hover:scale-[1.01]"
+                  />
+                </Link>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Heading & CTAs */}
-        <div className="space-y-6 max-w-2xl">
-          <div className="space-y-3">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight leading-[1.02] text-white">
-              {slide.heading}
-            </h1>
-            <p className="text-sm sm:text-base text-neutral-200 font-normal tracking-wide max-w-lg leading-relaxed">
-              {slide.subtitle}
-            </p>
-          </div>
-
-          <div className="pt-2 flex flex-wrap items-center gap-4">
-            <Link
-              href={slide.primaryCtaLink}
-              className="inline-flex items-center justify-center px-8 py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest hover:bg-neutral-200 transition-colors shadow-lg active:scale-95"
+        {/* Prev / Next Chevrons */}
+        {slides.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prevSlide();
+              }}
+              aria-label="Previous banner"
+              className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-sm border border-white/20 flex items-center justify-center transition-all opacity-70 group-hover:opacity-100 hover:scale-105 shadow-md cursor-pointer"
             >
-              {slide.primaryCtaText}
-            </Link>
+              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
 
-            <Link
-              href={slide.secondaryCtaLink}
-              className="inline-flex items-center justify-center px-7 py-3.5 border border-white/70 bg-black/30 backdrop-blur-sm text-white font-extrabold text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-all active:scale-95"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                nextSlide();
+              }}
+              aria-label="Next banner"
+              className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-sm border border-white/20 flex items-center justify-center transition-all opacity-70 group-hover:opacity-100 hover:scale-105 shadow-md cursor-pointer"
             >
-              {slide.secondaryCtaText}
-            </Link>
+              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
 
-            {/* Slide navigation buttons */}
-            <div className="flex items-center gap-1 ml-auto sm:ml-2">
-              <button
-                type="button"
-                onClick={prevSlide}
-                className="w-10 h-10 border border-white/30 bg-black/40 backdrop-blur-xs text-white hover:bg-white hover:text-black transition-all flex items-center justify-center cursor-pointer"
-                aria-label="Previous slide"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={nextSlide}
-                className="w-10 h-10 border border-white/30 bg-black/40 backdrop-blur-xs text-white hover:bg-white hover:text-black transition-all flex items-center justify-center cursor-pointer"
-                aria-label="Next slide"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            {/* Bottom Dots Indicator */}
+            <div className="absolute bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-xs">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    idx === currentIndex
+                      ? 'w-7 bg-white'
+                      : 'w-2 bg-white/45 hover:bg-white/80'
+                  }`}
+                />
+              ))}
             </div>
-          </div>
-        </div>
-
-        {/* Bottom Banner Indicators */}
-        <div className="flex items-center justify-between border-t border-white/20 pt-4 text-xs text-neutral-300">
-          <div className="flex items-center gap-2">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setCurrentSlide(idx)}
-                aria-label={`Go to slide ${idx + 1}`}
-                className={`h-1.5 transition-all duration-300 ${
-                  idx === currentSlide ? 'w-8 bg-white' : 'w-2.5 bg-white/40 hover:bg-white/70'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={scrollToNext}
-            className="flex items-center gap-2 text-[10px] tracking-widest uppercase font-bold text-neutral-300 hover:text-white transition-colors group cursor-pointer"
-            aria-label="Scroll down"
-          >
-            <span>SCROLL TO EXPLORE</span>
-            <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-1 transition-transform" />
-          </button>
-        </div>
+          </>
+        )}
       </div>
     </section>
   );

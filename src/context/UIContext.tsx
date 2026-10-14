@@ -20,8 +20,9 @@ interface UIContextType {
   closeSearch: () => void;
 
   isAuthModalOpen: boolean;
+  authModalMode: 'login' | 'register';
   setIsAuthModalOpen: (open: boolean) => void;
-  openAuthModal: () => void;
+  openAuthModal: (mode?: 'login' | 'register' | unknown) => void;
   closeAuthModal: () => void;
 
   toasts: Toast[];
@@ -35,6 +36,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastCounterRef = useRef(0);
 
@@ -51,6 +53,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
     }, 3500);
   }, [removeToast]);
 
+  const openAuthModal = useCallback((modeOrEvent?: 'login' | 'register' | unknown) => {
+    const targetMode = modeOrEvent === 'register' ? 'register' : 'login';
+    setAuthModalMode(targetMode);
+    setIsAuthModalOpen(true);
+  }, []);
+
   return (
     <UIContext.Provider
       value={{
@@ -65,8 +73,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
         closeSearch: () => setIsSearchOpen(false),
 
         isAuthModalOpen,
+        authModalMode,
         setIsAuthModalOpen,
-        openAuthModal: () => setIsAuthModalOpen(true),
+        openAuthModal,
         closeAuthModal: () => setIsAuthModalOpen(false),
 
         toasts,

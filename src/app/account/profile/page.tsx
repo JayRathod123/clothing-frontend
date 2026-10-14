@@ -27,6 +27,31 @@ export default function ProfilePage() {
     showToast('Profile & delivery preferences updated successfully');
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="py-24 md:py-32 bg-neutral-50/60 text-center">
+        <Container size="sm">
+          <div className="bg-white border border-neutral-200 p-8 md:p-12 space-y-6 rounded-xl shadow-xs">
+            <User className="w-10 h-10 text-neutral-800 mx-auto" />
+            <div className="space-y-2">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 uppercase">
+                Sign in to view your profile
+              </h1>
+              <p className="text-xs text-neutral-500 max-w-sm mx-auto leading-relaxed">
+                Log in to manage your contact details, personal preferences, and saved delivery addresses.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Button variant="primary" size="md" onClick={openAuthModal} className="w-full sm:w-auto px-8">
+                Sign In / Register
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="py-8 min-h-screen bg-neutral-50/60">
       <Container>

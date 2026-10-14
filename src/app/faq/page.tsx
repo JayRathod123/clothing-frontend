@@ -43,13 +43,13 @@ const FAQ_ITEMS = [
   },
   {
     category: 'returns',
-    title: 'What is your return and exchange policy?',
-    content: 'We offer a hassle-free 7-day exchange and return policy starting from the date of delivery. If you need a different size, we arrange a reverse pickup from your doorstep at zero cost. Garments must be unworn with original tags attached.',
+    title: 'What is your return policy?',
+    content: 'We accept returns exclusively for damaged or defective products received. If your item arrived damaged, please notify our support team within 48 hours of delivery with unboxing photos or video evidence. Once verified, we will arrange a reverse pickup at zero cost and issue a prompt replacement or full refund.',
   },
   {
     category: 'returns',
-    title: 'How long do refunds take to process?',
-    content: 'Once the reverse courier inspects the returned piece at our facility, prepaid refunds are initiated immediately back to your original payment method within 48 hours. For COD orders, we transfer directly to your verified UPI ID or bank account.',
+    title: 'How long do refunds for damaged items take to process?',
+    content: 'Once the damaged piece is received and inspected at our facility, refunds are initiated immediately back to your original payment method within 48 hours. For COD orders, refunds are transferred directly to your verified UPI ID or bank account.',
   },
   {
     category: 'fabric',
@@ -85,7 +85,7 @@ export default function FaqPage() {
           <span className="text-[11px] font-black uppercase tracking-[0.25em] text-red-600 block">
             CLIENT ASSISTANCE
           </span>
-          <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-neutral-900">
+          <h1 className="text-3xl sm:text-5xl font-semibold uppercase tracking-tight text-neutral-900">
             Frequently Asked Questions
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 max-w-lg mx-auto font-normal leading-relaxed">

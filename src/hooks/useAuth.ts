@@ -1,9 +1,22 @@
+import React, { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
 import { LoginDto, RegisterDto } from '@/types/auth.types';
 
 export function useAuth() {
   const queryClient = useQueryClient();
+
+  // Listen for session expiry event dispatched by axios interceptor
+  useEffect(() => {
+    const handleExpired = () => {
+      queryClient.setQueryData(['auth', 'user'], null);
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:expired', handleExpired);
+      return () => window.removeEventListener('auth:expired', handleExpired);
+    }
+  }, [queryClient]);
 
   const userQuery = useQuery({
     queryKey: ['auth', 'user'],
@@ -15,6 +28,7 @@ export function useAuth() {
     onSuccess: (user) => {
       queryClient.setQueryData(['auth', 'user'], user);
       queryClient.invalidateQueries({ queryKey: ['auth'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
   });
 
@@ -23,6 +37,7 @@ export function useAuth() {
     onSuccess: (user) => {
       queryClient.setQueryData(['auth', 'user'], user);
       queryClient.invalidateQueries({ queryKey: ['auth'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
   });
 
@@ -31,6 +46,7 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.setQueryData(['auth', 'user'], null);
       queryClient.invalidateQueries({ queryKey: ['auth'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
   });
 
@@ -43,5 +59,6 @@ export function useAuth() {
     register: registerMutation.mutateAsync,
     isRegistering: registerMutation.isPending,
     logout: logoutMutation.mutateAsync,
+    isLoggingOut: logoutMutation.isPending,
   };
 }
